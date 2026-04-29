@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0F">
+<title>ZEX Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0A0F;--surface:#13131A;--card:#1C1C27;--card2:#222234;
+  --primary:#6C63FF;--secondary:#00D9A3;--text:#FFFFFF;--muted:#B0B0C3;
+  --danger:#FF4757;--warning:#FFC857;--success:#00D9A3;--border:rgba(255,255,255,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent!important;outline:none!important;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:'Outfit',sans-serif;font-weight:700;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,textarea,select{font-family:inherit;color:inherit;background:none;border:none;}
+a{color:var(--primary);text-decoration:none;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--card2);border-radius:4px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes slideDown{from{transform:translateY(-100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+@keyframes scaleIn{from{transform:scale(.94);opacity:0;}to{transform:scale(1);opacity:1;}}
+@keyframes countUp{from{transform:translateY(8px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+.screen{position:fixed;inset:0;display:none;flex-direction:column;animation:fadeIn .25s;}
+.screen.active{display:flex;}
+
+/* AUTH SCREENS */
+.auth-bg{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 30% 20%,#1c1850 0%,var(--bg) 70%);}
+.auth-card{background:var(--surface);border-radius:24px;padding:36px;width:100%;max-width:440px;box-shadow:0 30px 80px rgba(0,0,0,.4);border:1px solid var(--border);}
+.auth-card .logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#6C63FF,#00D9A3);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:800;font-size:28px;color:#fff;margin-bottom:20px;}
+.auth-card h1{font-size:26px;letter-spacing:-.5px;margin-bottom:6px;}
+.auth-card .sub{color:var(--muted);font-size:14px;margin-bottom:24px;}
+.field{position:relative;margin-bottom:14px;}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.input{width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:14px;transition:border-color .2s;}
+.input:focus{border-color:var(--primary);}
+textarea.input{resize:vertical;min-height:80px;}
+.btn{padding:13px 18px;border-radius:12px;background:linear-gradient(135deg,#6C63FF,#5046ff);color:#fff;font-weight:700;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s;min-height:44px;}
+.btn.full{width:100%;}
+.btn:active{transform:scale(.97);}
+.btn.ghost{background:var(--card);color:var(--text);}
+.btn.danger{background:linear-gradient(135deg,#ff4757,#e0304a);}
+.btn.success{background:linear-gradient(135deg,#00D9A3,#00b890);}
+.btn.warn{background:linear-gradient(135deg,#FFC857,#e8a81a);color:#1a1a2e;}
+.btn.outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn.sm{padding:8px 12px;font-size:12px;min-height:34px;}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.btn .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+.error-msg{background:rgba(255,71,87,.12);color:var(--danger);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;}
+.error-msg.show{display:block;animation:slideUp .25s;}
+.success-msg{background:rgba(0,217,163,.12);color:var(--success);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;}
+.success-msg.show{display:block;animation:slideUp .25s;}
+.link-row{margin-top:18px;text-align:center;color:var(--muted);font-size:13px;}
+.foot{margin-top:30px;text-align:center;color:var(--muted);font-size:11px;}
+
+/* DASHBOARD LAYOUT */
+.dash{flex-direction:row;}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar .brand{padding:22px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.sidebar .brand .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6C63FF,#00D9A3);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:800;font-size:18px;color:#fff;}
+.sidebar .brand .name{font-family:'Outfit';font-weight:700;font-size:15px;}
+.sidebar .brand .sub{font-size:11px;color:var(--muted);}
+.nav-list{flex:1;padding:14px 10px;overflow-y:auto;}
+.nav-list button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:500;color:var(--muted);margin-bottom:3px;text-align:left;}
+.nav-list button:hover{background:var(--card);color:var(--text);}
+.nav-list button.active{background:linear-gradient(135deg,#6C63FF22,#00D9A322);color:var(--text);font-weight:600;}
+.nav-list .ico{font-size:18px;width:22px;text-align:center;}
+.sidebar .foot-info{padding:14px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);}
+.topbar .ttl{font-family:'Outfit';font-size:18px;font-weight:700;flex:1;}
+.topbar .who{font-size:13px;color:var(--muted);}
+.topbar .who strong{color:var(--text);}
+.content{flex:1;overflow-y:auto;padding:24px;}
+.content-pane{display:none;animation:fadeIn .25s;}
+.content-pane.active{display:block;}
+
+/* RESPONSIVE */
+.menu-toggle{display:none;width:38px;height:38px;border-radius:10px;background:var(--card);align-items:center;justify-content:center;}
+@media(max-width:768px){
+  .sidebar{position:fixed;inset:0 auto 0 0;z-index:50;transform:translateX(-100%);transition:transform .25s;}
+  .sidebar.show{transform:translateX(0);}
+  .sidebar-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;display:none;}
+  .sidebar-bg.show{display:block;}
+  .menu-toggle{display:flex;}
+  .content{padding:16px;}
+}
+
+/* CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:24px;}
+.stat{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);animation:countUp .3s;}
+.stat .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;}
+.stat .num{font-family:'Outfit';font-size:30px;font-weight:800;margin:6px 0 2px;background:linear-gradient(135deg,#6C63FF,#00D9A3);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.stat .delta{font-size:11px;color:var(--muted);}
+
+.section-title{font-family:'Outfit';font-size:16px;font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:10px;}
+.section-title .count{font-size:12px;color:var(--muted);font-weight:600;background:var(--card);padding:3px 10px;border-radius:10px;}
+.card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);margin-bottom:14px;}
+.card h3{font-size:15px;margin-bottom:10px;}
+.card p{font-size:13px;color:var(--muted);margin-bottom:10px;}
+
+/* TABLE / LIST */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.toolbar .input{flex:1;min-width:200px;}
+.tabs{display:flex;gap:6px;background:var(--card);padding:4px;border-radius:12px;}
+.tabs button{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);}
+.tabs button.active{background:var(--surface);color:var(--text);}
+.user-row{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border-radius:14px;margin-bottom:8px;border:1px solid var(--border);}
+.user-row .avatar{width:42px;height:42px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:700;font-size:14px;color:#fff;flex-shrink:0;position:relative;}
+.user-row .avatar .dot{position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:#666;border:2px solid var(--card);}
+.user-row .avatar .dot.on{background:#00D9A3;}
+.user-row .meta{flex:1;min-width:0;}
+.user-row .name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;}
+.user-row .sub{font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap;}
+.user-row .actions{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.tag.verified{background:rgba(108,99,255,.18);color:var(--primary);}
+.tag.suspended{background:rgba(255,71,87,.18);color:var(--danger);}
+.tag.pending{background:rgba(255,200,87,.18);color:var(--warning);}
+.tag.approved{background:rgba(0,217,163,.18);color:var(--success);}
+.tag.rejected{background:rgba(255,71,87,.18);color:var(--danger);}
+
+/* TOGGLE */
+.toggle{position:relative;width:42px;height:24px;background:var(--card2);border-radius:12px;transition:background .2s;flex-shrink:0;cursor:pointer;}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;}
+.toggle.on{background:var(--primary);}
+.toggle.on::after{transform:translateX(18px);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:200;animation:fadeIn .2s;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border-radius:20px;padding:24px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;animation:scaleIn .25s;border:1px solid var(--border);}
+.modal h3{font-size:20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.modal .close{width:32px;height:32px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--muted);}
+
+/* BADGE PREVIEW */
+.badge-preview-area{display:flex;gap:24px;flex-wrap:wrap;align-items:center;padding:18px;background:var(--card2);border-radius:14px;}
+.badge-preview-circle{width:120px;height:120px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;position:relative;}
+.badge-preview-circle .badge{position:absolute;bottom:-4px;right:-4px;width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;border:3px solid var(--card);}
+.badge-preview-circle img.badge{padding:0;background:none;}
+.upload-area{border:2px dashed var(--border);border-radius:14px;padding:24px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .2s;}
+.upload-area:hover{border-color:var(--primary);}
+
+/* TEST STEPS */
+.test-step{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border-radius:10px;margin-bottom:6px;}
+.test-step .ico{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.test-step .ico.pending{background:var(--card2);color:var(--muted);}
+.test-step .ico.running{background:var(--card2);color:var(--primary);animation:pulse 1s infinite;}
+.test-step .ico.ok{background:rgba(0,217,163,.18);color:var(--success);}
+.test-step .ico.fail{background:rgba(255,71,87,.18);color:var(--danger);}
+.test-step .desc{flex:1;font-size:13px;}
+.test-step .err{font-size:11px;color:var(--danger);margin-top:4px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card2);color:var(--text);padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;z-index:300;display:none;border:1px solid var(--border);box-shadow:0 12px 30px rgba(0,0,0,.4);}
+.toast.show{display:block;animation:slideUp .25s;}
+
+/* ACTIVITY FEED */
+.activity-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.activity-item:last-child{border-bottom:none;}
+.activity-item .dot{width:8px;height:8px;border-radius:50%;background:var(--primary);margin-top:6px;flex-shrink:0;}
+.activity-item .when{font-size:11px;color:var(--muted);margin-top:2px;}
+</style>
+</head>
+<body>
+
+<!-- ADMIN LOGIN -->
+<div class="screen active" id="admin-login-screen">
+  <div class="auth-bg">
+    <div class="auth-card">
+      <div class="logo">Z</div>
+      <h1>ZEX Admin Panel</h1>
+      <div class="sub">Sign in to manage ZEX Messenger</div>
+      <div class="error-msg" id="login-error"></div>
+      <div class="success-msg" id="login-success"></div>
+      <div class="field"><label>Email</label><input class="input" type="email" id="admin-email" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input class="input" type="password" id="admin-password" autocomplete="current-password"></div>
+      <a id="admin-forgot" style="font-size:13px;color:var(--primary);font-weight:600;display:inline-block;margin-bottom:14px;">Forgot Password?</a>
+      <button class="btn full" id="admin-login-btn">Sign In</button>
+      <div class="link-row">No admin account? <a id="goto-admin-signup">Create one</a></div>
+      <div class="foot">ZEX Messenger v1.0 · Designed by ZEX Core · Paras Sharma</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN SIGNUP -->
+<div class="screen" id="admin-signup-screen">
+  <div class="auth-bg">
+    <div class="auth-card">
+      <div class="logo">Z</div>
+      <h1>Create Admin Account</h1>
+      <div class="sub">Admin Secret Key required</div>
+      <div class="error-msg" id="signup-error"></div>
+      <div class="field"><label>Name</label><input class="input" type="text" id="signup-name"></div>
+      <div class="field"><label>Email</label><input class="input" type="email" id="signup-email"></div>
+      <div class="field"><label>Password</label><input class="input" type="password" id="signup-password"></div>
+      <div class="field"><label>Confirm Password</label><input class="input" type="password" id="signup-confirm"></div>
+      <div class="field"><label>Admin Secret Key</label><input class="input" type="password" id="signup-secret" placeholder="ZEX-ADMIN-2025"></div>
+      <button class="btn full" id="admin-signup-btn">Create Admin</button>
+      <div class="link-row">Already an admin? <a id="goto-admin-login">Sign In</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen dash" id="admin-dashboard">
+  <div class="sidebar-bg" id="sidebar-bg"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">Z</div>
+      <div><div class="name">ZEX Admin</div><div class="sub">Messenger Panel</div></div>
+    </div>
+    <nav class="nav-list">
+      <button class="active" data-section="dashboard"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span>Dashboard</span></button>
+      <button data-section="users"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="3"/><path d="M2 21a7 7 0 0 1 14 0M14 21a6 6 0 0 1 8-5.5"/></svg></span><span>Users</span></button>
+      <button data-section="verification"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4z"/><path d="m9 12 2 2 4-4"/></svg></span><span>Verification</span></button>
+      <button data-section="bookings"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1" fill="currentColor"/><circle cx="3.5" cy="12" r="1" fill="currentColor"/><circle cx="3.5" cy="18" r="1" fill="currentColor"/></svg></span><span>Bookings</span></button>
+      <button data-section="notifications"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></span><span>Notifications</span></button>
+      <button data-section="settings"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span><span>App Settings</span></button>
+      <button data-section="config"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 4 14a2 2 0 0 0 0 3l3 3a2 2 0 0 0 3 0L20 10M14 4l3-2 5 5-2 3M14 4l6 6"/></svg></span><span>Config Manager</span></button>
+      <button data-section="test"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v3l4 12a3 3 0 0 1-3 4H8a3 3 0 0 1-3-4l4-12V3z"/><path d="M9 3h6"/></svg></span><span>Test Mode</span></button>
+    </nav>
+    <div class="foot-info">
+      <div>Logged in as</div>
+      <div style="color:var(--text);font-weight:600;margin-top:2px;" id="admin-name">—</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="ttl" id="page-title">Dashboard</div>
+      <div class="who">Welcome, <strong id="admin-name-top">Admin</strong></div>
+      <button class="btn ghost sm" id="admin-logout">Logout</button>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="content-pane active" id="pane-dashboard">
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat"><div class="lbl">Total Users</div><div class="num" id="s-users">0</div><div class="delta">All registered users</div></div>
+          <div class="stat"><div class="lbl">Active Now</div><div class="num" id="s-active">0</div><div class="delta">Currently online</div></div>
+          <div class="stat"><div class="lbl">Total Chats</div><div class="num" id="s-chats">0</div><div class="delta">Active conversations</div></div>
+          <div class="stat"><div class="lbl">Verified</div><div class="num" id="s-verified">0</div><div class="delta">With badge</div></div>
+          <div class="stat"><div class="lbl">Suspended</div><div class="num" id="s-suspended">0</div><div class="delta">Blocked accounts</div></div>
+          <div class="stat"><div class="lbl">Pending Bookings</div><div class="num" id="s-bookings">0</div><div class="delta">Verification requests</div></div>
+          <div class="stat"><div class="lbl">Messages Today</div><div class="num" id="s-msgs">0</div><div class="delta">Last 24 hours</div></div>
+        </div>
+        <div class="section-title">Recent Activity <button class="btn ghost sm" id="refresh-stats" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Refresh</button></div>
+        <div class="card" style="padding:0;"><div id="activity-feed" style="max-height:420px;overflow-y:auto;"></div></div>
+      </div>
+
+      <!-- USERS -->
+      <div class="content-pane" id="pane-users">
+        <div class="toolbar">
+          <input class="input" id="user-search" placeholder="Search by name, ZEX ID, or email...">
+          <button class="btn ghost sm" id="users-refresh" style="display:inline-flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Refresh</button>
+        </div>
+        <div class="section-title">All Users <span class="count" id="users-count">0</span></div>
+        <div id="users-list"></div>
+      </div>
+
+      <!-- VERIFICATION -->
+      <div class="content-pane" id="pane-verification">
+        <div class="card">
+          <h3>Custom Badge Image</h3>
+          <p>Upload a transparent PNG. Stored at <code>zex-messenger/badges/verification-badge.png</code></p>
+          <div class="badge-preview-area" style="margin-bottom:14px;">
+            <div class="badge-preview-circle">
+              <div style="font-family:'Outfit';font-weight:800;font-size:36px;color:var(--muted);">U</div>
+              <div class="badge" id="badge-preview-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="4 12 9 17 20 6"/></svg></div>
+            </div>
+            <div style="flex:1;min-width:200px;">
+              <div style="font-family:'Outfit';font-weight:700;font-size:16px;display:flex;align-items:center;">Sample User <div class="badge" id="badge-preview-inline" style="margin-left:6px;width:20px;height:20px;font-size:11px;border:none;position:relative;bottom:0;right:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><polyline points="4 12 9 17 20 6"/></svg></div></div>
+              <div style="color:var(--muted);font-size:12px;margin-top:4px;">@sample_user · ZEX-XXXX1234</div>
+            </div>
+          </div>
+          <label class="upload-area" for="badge-upload">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:38px;height:38px;color:var(--muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <div style="margin-top:8px;font-weight:600;">Click to upload badge PNG</div>
+            <div style="font-size:11px;margin-top:4px;">Transparent background recommended</div>
+          </label>
+          <input type="file" id="badge-upload" accept="image/png" style="display:none;">
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button class="btn ghost sm" id="reset-badge">Reset to Default</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Badge Animation</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
+            <span>Animated Badge</span>
+            <div class="toggle" id="badge-anim-toggle"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+            <span>Animation type:</span>
+            <select class="input" id="badge-anim-type" style="width:auto;padding:8px 12px;">
+              <option value="glow">Glow</option><option value="pulse">Pulse</option><option value="rotate">Rotate</option><option value="sparkle">Sparkle</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section-title">User Verification Toggle</div>
+        <div class="toolbar">
+          <input class="input" id="verify-search" placeholder="Search users...">
+          <div class="tabs">
+            <button class="active" data-vfilter="all">All</button>
+            <button data-vfilter="verified">Verified</button>
+            <button data-vfilter="unverified">Unverified</button>
+          </div>
+        </div>
+        <div id="verify-list"></div>
+      </div>
+
+      <!-- BOOKINGS -->
+      <div class="content-pane" id="pane-bookings">
+        <div class="stats-grid">
+          <div class="stat"><div class="lbl">Total</div><div class="num" id="bk-total">0</div></div>
+          <div class="stat"><div class="lbl">Pending</div><div class="num" id="bk-pending">0</div></div>
+          <div class="stat"><div class="lbl">Approved</div><div class="num" id="bk-approved">0</div></div>
+          <div class="stat"><div class="lbl">Rejected</div><div class="num" id="bk-rejected">0</div></div>
+        </div>
+        <div class="toolbar">
+          <div class="tabs">
+            <button class="active" data-bfilter="all">All</button>
+            <button data-bfilter="pending">Pending</button>
+            <button data-bfilter="approved">Approved</button>
+            <button data-bfilter="rejected">Rejected</button>
+          </div>
+          <button class="btn ghost sm" id="export-csv" style="display:inline-flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export CSV</button>
+        </div>
+        <div id="bookings-list"></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="content-pane" id="pane-notifications">
+        <div class="card">
+          <h3>Send Broadcast</h3>
+          <div class="field"><label>Title</label><input class="input" id="notif-title" placeholder="e.g., New feature alert"></div>
+          <div class="field"><label>Message</label><textarea class="input" id="notif-message" rows="3"></textarea></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:140px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Type</label>
+              <select class="input" id="notif-type"><option value="info">Info</option><option value="warning">Warning</option><option value="announcement">Announcement</option><option value="promotion">Promotion</option></select>
+            </div>
+            <div style="flex:1;min-width:140px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Send To</label>
+              <select class="input" id="notif-target"><option value="all">All Users</option><option value="verified">Verified Only</option><option value="specific">Specific User</option></select>
+            </div>
+          </div>
+          <div class="field" id="specific-user-row" style="display:none;margin-top:10px;"><label>Target ZEX ID</label><input class="input" id="notif-zexid" placeholder="ZEX-XXXXXXXX"></div>
+          <div style="margin-top:14px;display:flex;gap:8px;"><button class="btn" id="send-broadcast">Send Notification</button><button class="btn ghost" id="test-self-notif">Test to Self</button></div>
+        </div>
+        <div class="section-title">Notification History</div>
+        <div id="notif-history"></div>
+      </div>
+
+      <!-- APP SETTINGS -->
+      <div class="content-pane" id="pane-settings">
+        <div class="card">
+          <h3>App Settings</h3>
+          <p>Changes propagate to all user apps in real time.</p>
+          <div class="field"><label>App Name</label><input class="input" id="set-app-name"></div>
+          <div class="field"><label>Tagline</label><input class="input" id="set-tagline"></div>
+          <div class="field"><label>Announcement Banner</label><textarea class="input" id="set-announcement" rows="2" placeholder="Empty to hide"></textarea></div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:160px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Default Theme</label><select class="input" id="set-theme"><option value="dark">Dark</option><option value="light">Light</option></select></div>
+            <div style="flex:1;min-width:160px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Max File Size (MB)</label><input class="input" type="number" id="set-maxfile" min="1" max="100"></div>
+            <div style="flex:1;min-width:160px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Max Message Length</label><input class="input" type="number" id="set-maxmsg" min="100"></div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><span>Maintenance Mode</span><div class="toggle" id="set-maint"></div></label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><span>Registration Open</span><div class="toggle on" id="set-reg"></div></label>
+          </div>
+          <div class="field" style="margin-top:14px;"><label>Footer Text</label><textarea class="input" id="set-footer" rows="2"></textarea></div>
+          <div style="margin-top:14px;"><button class="btn" id="save-settings">Save All Settings</button></div>
+        </div>
+      </div>
+
+      <!-- CONFIG MANAGER -->
+      <div class="content-pane" id="pane-config">
+        <div class="card" style="border-color:var(--warning);">
+          <h3 style="display:inline-flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--warning);"><path d="M12 9v4M12 17h0"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Configuration Manager</h3>
+          <p>Only modify these if you know what you're doing.</p>
+        </div>
+        <div class="card">
+          <h3>Firebase Config</h3>
+          <div class="field"><label>Firebase Config JSON</label><textarea class="input" id="cfg-firebase" rows="10" style="font-family:monospace;font-size:12px;"></textarea></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost sm" id="cfg-fb-validate">Validate JSON</button><button class="btn sm" id="cfg-fb-apply">Apply (this session)</button><button class="btn ghost sm" id="cfg-fb-copy">Copy</button></div>
+          <p style="margin-top:10px;color:var(--muted);font-size:12px;">To make permanent, paste the config at the bottom of <strong>index.html</strong> and <strong>admin.html</strong>.</p>
+        </div>
+        <div class="card">
+          <h3>Supabase Config</h3>
+          <div class="field"><label>Supabase URL</label><input class="input" id="cfg-supa-url"></div>
+          <div class="field"><label>Supabase Anon Key</label><input class="input" id="cfg-supa-key" type="password"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost sm" id="cfg-sb-test">Test Connection</button><button class="btn sm" id="cfg-sb-apply">Apply (this session)</button></div>
+        </div>
+        <div class="card">
+          <h3>Bucket Name</h3>
+          <p>Active bucket: <strong id="cur-bucket">zex-messenger</strong></p>
+          <div class="field"><label>Bucket Name</label><input class="input" id="cfg-bucket" value="zex-messenger"></div>
+          <button class="btn ghost sm" id="cfg-bucket-apply">Update Bucket</button>
+          <p style="margin-top:10px;color:var(--muted);font-size:12px;">Existing files remain in the old bucket.</p>
+        </div>
+      </div>
+
+      <!-- TEST MODE -->
+      <div class="content-pane" id="pane-test">
+        <div class="card">
+          <h3>Notification Test</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn sm" id="t-notif-self">Send to Self</button>
+            <button class="btn sm" id="t-notif-all">Test Broadcast</button>
+            <button class="btn ghost sm" id="t-popup">In-App Popup</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Full Config Test</h3>
+          <button class="btn" id="run-full-test">Run Full Config Test</button>
+          <div id="test-steps" style="margin-top:14px;"></div>
+          <div id="test-result" style="margin-top:14px;font-weight:700;"></div>
+        </div>
+        <div class="card">
+          <h3>Database Read/Write/Delete</h3>
+          <button class="btn ghost sm" id="t-db">Run DB Test</button>
+          <div id="t-db-out" style="margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted);"></div>
+        </div>
+        <div class="card">
+          <h3>Storage Upload/URL/Delete</h3>
+          <button class="btn ghost sm" id="t-storage">Run Storage Test</button>
+          <div id="t-storage-out" style="margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted);"></div>
+          <img id="t-storage-img" src="" style="display:none;margin-top:10px;max-width:100px;border-radius:8px;">
+        </div>
+        <div class="card">
+          <h3>Auth State</h3>
+          <div id="t-auth-out" style="font-family:monospace;font-size:12px;color:var(--muted);"></div>
+        </div>
+        <div class="card">
+          <h3>Realtime Listener Latency</h3>
+          <button class="btn ghost sm" id="t-realtime">Run Realtime Test</button>
+          <div id="t-realtime-out" style="margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted);"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL & TOAST -->
+<div class="modal-bg" id="modal-bg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set, get, push, onValue, off, update, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const ADMIN_SECRET_KEY = "ZEX-ADMIN-2025";
+
+let fbApp = initializeApp(window.firebaseConfig);
+let auth = getAuth(fbApp);
+let db = getDatabase(fbApp);
+let supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+let BUCKET_NAME = window.BUCKET_NAME || "zex-messenger";
+
+let currentAdmin = null;
+let currentSection = "dashboard";
+let allUsers = {};
+let allBookings = {};
+let bookingFilter = "all";
+let verifyFilter = "all";
+let verifySearch = "";
+let userSearchQuery = "";
+
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+function escHTML(s){const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML;}
+
+const ICONS = {
+  dashboard:`<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>`,
+  users:`<circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="3"/><path d="M2 21a7 7 0 0 1 14 0M14 21a6 6 0 0 1 8-5.5"/>`,
+  shieldCheck:`<path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4z"/><path d="m9 12 2 2 4-4"/>`,
+  list:`<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1" fill="currentColor"/><circle cx="3.5" cy="12" r="1" fill="currentColor"/><circle cx="3.5" cy="18" r="1" fill="currentColor"/>`,
+  bell:`<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/>`,
+  settings:`<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>`,
+  config:`<path d="M14 4 4 14a2 2 0 0 0 0 3l3 3a2 2 0 0 0 3 0L20 10M14 4l3-2 5 5-2 3M14 4l6 6"/>`,
+  flask:`<path d="M9 3h6v3l4 12a3 3 0 0 1-3 4H8a3 3 0 0 1-3-4l4-12V3z"/><path d="M9 3h6"/>`,
+  refresh:`<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>`,
+  download:`<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>`,
+  upload:`<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>`,
+  alert:`<path d="M12 9v4M12 17h0"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>`,
+  close:`<path d="M6 6l12 12M18 6L6 18"/>`,
+  menu:`<path d="M3 6h18M3 12h18M3 18h18"/>`,
+  phone:`<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1A19.5 19.5 0 0 1 5 13.4 19.8 19.8 0 0 1 1.9 4.8 2 2 0 0 1 3.9 2.6h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 10.3a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/>`,
+  check:`<polyline points="4 12 9 17 20 6"/>`,
+  cross:`<path d="M6 6l12 12M18 6L6 18"/>`,
+  badge:`<path d="m12 2 2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.4l-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z"/>`
+};
+function ic(name, attrs=""){ return `<svg class="ic" viewBox="0 0 24 24" ${attrs}>${ICONS[name]||""}</svg>`; }
+function showToast(msg,t=2200){const e=$("toast");e.textContent=msg;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),t);}
+function showError(id,msg){const e=$(id);e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),5000);}
+function showSuccess(id,msg){const e=$(id);e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),5000);}
+function setLoading(btn,loading){if(loading){btn._orig=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';}else{btn.disabled=false;btn.innerHTML=btn._orig;}}
+function showScreen(id){$$(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active");}
+function showModal(html){$("modal").innerHTML=html;$("modal-bg").classList.add("show");}
+function closeModal(){$("modal-bg").classList.remove("show");}
+window.closeModal = closeModal;
+$("modal-bg").addEventListener("click",e=>{if(e.target.id==="modal-bg") closeModal();});
+function timeAgo(ts){if(!ts)return"";const d=new Date(ts),now=new Date(),diff=(now-d)/1000;if(diff<60)return"just now";if(diff<3600)return Math.floor(diff/60)+"m ago";if(diff<86400)return Math.floor(diff/3600)+"h ago";return d.toLocaleDateString();}
+function avatarInit(name){if(!name)return"?";return name.split(/\s+/).map(s=>s[0]||"").join("").slice(0,2).toUpperCase();}
+function avatarColor(seed){const c=["#6C63FF","#00D9A3","#FF8C42","#FF4757","#54A0FF","#FFC857","#A55EEA","#26C6DA"];let h=0;for(const ch of (seed||""))h=(h*31+ch.charCodeAt(0))>>>0;return c[h%c.length];}
+function setAvatarBg(el, u){
+  if(u && u.pfp){ el.style.background = `url(${u.pfp}) center/cover`; el.textContent=""; }
+  else { el.style.background = avatarColor(u?.zexId||u?.name||""); el.textContent = avatarInit(u?.name||""); }
+}
+
+/* ============= AUTH ============= */
+$("goto-admin-signup").onclick = ()=>showScreen("admin-signup-screen");
+$("goto-admin-login").onclick = ()=>showScreen("admin-login-screen");
+
+$("admin-login-btn").onclick = async ()=>{
+  const e=$("admin-email").value.trim(), p=$("admin-password").value;
+  if(!e||!p){showError("login-error","Please fill in both fields.");return;}
+  const btn=$("admin-login-btn"); setLoading(btn,true);
+  try{ await signInWithEmailAndPassword(auth,e,p); }
+  catch(err){ showError("login-error", friendlyAuth(err)); setLoading(btn,false); }
+};
+$("admin-forgot").onclick = async ()=>{
+  const e=$("admin-email").value.trim();
+  if(!e){showError("login-error","Enter your email first.");return;}
+  try{ await sendPasswordResetEmail(auth,e); showSuccess("login-success","Reset email sent."); }catch(err){ showError("login-error",friendlyAuth(err)); }
+};
+$("admin-signup-btn").onclick = async ()=>{
+  const name=$("signup-name").value.trim(),e=$("signup-email").value.trim(),p=$("signup-password").value,c=$("signup-confirm").value,k=$("signup-secret").value;
+  if(!name||!e||!p){showError("signup-error","All fields required.");return;}
+  if(p!==c){showError("signup-error","Passwords don't match.");return;}
+  if(p.length<6){showError("signup-error","Password too short (min 6).");return;}
+  if(k!==ADMIN_SECRET_KEY){showError("signup-error","Invalid Admin Secret Key.");return;}
+  const btn=$("admin-signup-btn"); setLoading(btn,true);
+  try{
+    const cred = await createUserWithEmailAndPassword(auth,e,p);
+    await set(ref(db,`/admins/${cred.user.uid}`), {name, email:e, createdAt:serverTimestamp(), role:"admin"});
+    await logActivity(`Admin "${name}" was created`, cred.user.uid);
+  }catch(err){ showError("signup-error",friendlyAuth(err)); setLoading(btn,false); }
+};
+function friendlyAuth(e){
+  const c=e.code||"";
+  if(c.includes("invalid-email"))return"Invalid email format.";
+  if(c.includes("user-not-found"))return"No admin account found.";
+  if(c.includes("wrong-password")||c.includes("invalid-credential"))return"Wrong email or password.";
+  if(c.includes("email-already"))return"Email already in use.";
+  if(c.includes("weak-password"))return"Password too weak.";
+  return e.message||"Something went wrong.";
+}
+
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){ showScreen("admin-login-screen"); return; }
+  const adminSnap = await get(ref(db,`/admins/${user.uid}`));
+  if(!adminSnap.exists()){
+    showError("login-error","This account is not an admin.");
+    await signOut(auth);
+    return;
+  }
+  currentAdmin = {uid:user.uid, ...adminSnap.val()};
+  $("admin-name").textContent = currentAdmin.name||currentAdmin.email;
+  $("admin-name-top").textContent = currentAdmin.name||"Admin";
+  showScreen("admin-dashboard");
+  bootDashboard();
+});
+
+$("admin-logout").onclick = ()=>signOut(auth);
+
+/* ============= NAV ============= */
+$$(".nav-list button").forEach(b=>{
+  b.onclick = ()=>{
+    $$(".nav-list button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    const s = b.dataset.section;
+    currentSection = s;
+    $$(".content-pane").forEach(p=>p.classList.remove("active"));
+    $("pane-"+s).classList.add("active");
+    $("page-title").textContent = b.querySelector("span:last-child").textContent;
+    $("sidebar").classList.remove("show"); $("sidebar-bg").classList.remove("show");
+  };
+});
+$("menu-toggle").onclick = ()=>{ $("sidebar").classList.add("show"); $("sidebar-bg").classList.add("show"); };
+$("sidebar-bg").onclick = ()=>{ $("sidebar").classList.remove("show"); $("sidebar-bg").classList.remove("show"); };
+
+/* ============= BOOT DASHBOARD ============= */
+function bootDashboard(){
+  // Users live
+  onValue(ref(db,'/users'), (snap)=>{
+    allUsers = snap.val()||{};
+    renderStats();
+    renderUsers();
+    renderVerifyList();
+  });
+  // Bookings live
+  onValue(ref(db,'/verificationBookings'), (snap)=>{
+    allBookings = snap.val()||{};
+    renderBookings();
+    renderStats();
+  });
+  // Activity log live
+  onValue(ref(db,'/adminLogs'), (snap)=>{
+    const data = snap.val()||{};
+    const entries = Object.entries(data).sort((a,b)=>(b[1].timestamp||0)-(a[1].timestamp||0)).slice(0,20);
+    const f = $("activity-feed");
+    if(entries.length===0){ f.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);">No activity yet.</div>`; return; }
+    f.innerHTML = entries.map(([id,a])=>`<div class="activity-item"><div class="dot"></div><div style="flex:1;"><div>${escHTML(a.action)}</div><div class="when">${timeAgo(a.timestamp)}</div></div></div>`).join("");
+  });
+  // App settings
+  onValue(ref(db,'/appSettings'), (snap)=>{
+    const s = snap.val()||{};
+    $("set-app-name").value = s.appName||"ZEX Messenger";
+    $("set-tagline").value = s.tagline||"Connect. Chat. Verify.";
+    $("set-announcement").value = s.announcement||"";
+    $("set-theme").value = s.defaultTheme||"dark";
+    $("set-maxfile").value = s.maxFileSize||25;
+    $("set-maxmsg").value = s.maxMessageLength||1000;
+    $("set-footer").value = s.footerText||"Designed by ZEX Core — Paras Sharma — sharmaroyal580@gmail.com";
+    $("set-maint").classList.toggle("on", !!s.maintenanceMode);
+    $("set-reg").classList.toggle("on", s.registrationOpen!==false);
+    $("badge-anim-toggle").classList.toggle("on", !!s.badgeAnimation);
+    if(s.badgeAnimationType) $("badge-anim-type").value = s.badgeAnimationType;
+    if(s.badgeUrl){
+      const inline = $("badge-preview-inline"), icon = $("badge-preview-icon");
+      [inline,icon].forEach(el=>{ el.style.background=`url(${s.badgeUrl}) center/contain no-repeat`; el.textContent=""; });
+    }
+  });
+  // Notification history
+  onValue(ref(db,'/adminSentNotifications'), (snap)=>{
+    const data = snap.val()||{};
+    const entries = Object.entries(data).sort((a,b)=>(b[1].sentAt||0)-(a[1].sentAt||0));
+    const list = $("notif-history");
+    if(entries.length===0){ list.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);">No notifications sent yet.</div>`; return; }
+    list.innerHTML = entries.map(([id,n])=>`
+      <div class="card" style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:1;"><div style="font-weight:700;font-size:14px;">${escHTML(n.title)}</div><div style="color:var(--muted);font-size:13px;margin-top:4px;">${escHTML(n.message)}</div><div style="font-size:11px;color:var(--muted);margin-top:8px;">To: ${escHTML(n.recipients)} · ${timeAgo(n.sentAt)}</div></div>
+        <button class="btn ghost sm" data-del-notif="${id}">Delete</button>
+      </div>`).join("");
+    list.querySelectorAll("[data-del-notif]").forEach(b=>b.onclick=()=>remove(ref(db,`/adminSentNotifications/${b.dataset.delNotif}`)));
+  });
+  // Test mode auth state
+  if(currentAdmin) $("t-auth-out").innerHTML = `UID: ${currentAdmin.uid}<br>Email: ${currentAdmin.email}<br>Role: ${currentAdmin.role}`;
+  prefillConfig();
+  // Today msg count: count chats updated in last 24h
+  setTimeout(loadTodayMessages, 800);
+}
+
+async function loadTodayMessages(){
+  try{
+    const snap = await get(ref(db,'/chats'));
+    const data = snap.val()||{};
+    let count = 0;
+    const cutoff = Date.now() - 86400000;
+    Object.values(data).forEach(chat=>{
+      if(chat.messages){
+        Object.values(chat.messages).forEach(m=>{ if((m.timestamp||0) > cutoff) count++; });
+      }
+    });
+    $("s-msgs").textContent = count;
+  }catch(e){}
+}
+
+async function logActivity(action, targetUserId=null){
+  const r = push(ref(db,'/adminLogs'));
+  await set(r, {action, adminId:currentAdmin?.uid||"system", targetUserId, timestamp:serverTimestamp()});
+}
+
+function renderStats(){
+  const users = Object.values(allUsers);
+  $("s-users").textContent = users.length;
+  $("s-active").textContent = users.filter(u=>u.isOnline).length;
+  $("s-verified").textContent = users.filter(u=>u.isVerified).length;
+  $("s-suspended").textContent = users.filter(u=>u.isSuspended).length;
+  const bks = Object.values(allBookings);
+  $("s-bookings").textContent = bks.filter(b=>b.status==="pending").length;
+  $("bk-total").textContent = bks.length;
+  $("bk-pending").textContent = bks.filter(b=>b.status==="pending").length;
+  $("bk-approved").textContent = bks.filter(b=>b.status==="approved").length;
+  $("bk-rejected").textContent = bks.filter(b=>b.status==="rejected").length;
+  // Total chats
+  get(ref(db,'/chats')).then(s=>$("s-chats").textContent = Object.keys(s.val()||{}).length);
+}
+$("refresh-stats").onclick = ()=>{ renderStats(); loadTodayMessages(); showToast("Refreshed"); };
+
+/* ============= USERS ============= */
+$("user-search").addEventListener("input",e=>{ userSearchQuery = e.target.value.toLowerCase().trim(); renderUsers(); });
+$("users-refresh").onclick = ()=>{ renderUsers(); showToast("Refreshed"); };
+
+function renderUsers(){
+  const list = $("users-list");
+  let entries = Object.entries(allUsers);
+  if(userSearchQuery){
+    entries = entries.filter(([_,u])=>(u.name||"").toLowerCase().includes(userSearchQuery)||(u.zexId||"").toLowerCase().includes(userSearchQuery)||(u.email||"").toLowerCase().includes(userSearchQuery));
+  }
+  $("users-count").textContent = entries.length;
+  if(entries.length===0){ list.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);">No users found.</div>`; return; }
+  list.innerHTML = "";
+  entries.forEach(([uid,u])=>{
+    const row = document.createElement("div"); row.className="user-row";
+    const av = document.createElement("div"); av.className="avatar"; setAvatarBg(av,u);
+    const dot = document.createElement("div"); dot.className="dot"+(u.isOnline?" on":""); av.appendChild(dot);
+    row.appendChild(av);
+    const meta = document.createElement("div"); meta.className="meta";
+    meta.innerHTML = `<div class="name">${escHTML(u.name||"Unnamed")}${u.isVerified?' <span class="tag verified">VERIFIED</span>':''}${u.isSuspended?' <span class="tag suspended">SUSPENDED</span>':''}</div><div class="sub"><span style="color:var(--secondary);">${escHTML(u.zexId||"—")}</span><span>${escHTML(u.email||"")}</span><span>Joined ${u.createdAt?new Date(u.createdAt).toLocaleDateString():"—"}</span></div>`;
+    row.appendChild(meta);
+    const actions = document.createElement("div"); actions.className="actions";
+    actions.innerHTML = `
+      <button class="btn ghost sm" data-act="view">View</button>
+      <button class="btn ${u.isVerified?'success':'outline'} sm" data-act="verify" style="display:inline-flex;align-items:center;gap:5px;">${u.isVerified?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="4 12 9 17 20 6"/></svg>Verified':'Verify'}</button>
+      <button class="btn ${u.isSuspended?'warn':'outline'} sm" data-act="suspend">${u.isSuspended?'Unsuspend':'Suspend'}</button>
+      <button class="btn ghost sm" data-act="notify">Notify</button>
+      <button class="btn danger sm" data-act="delete">Delete</button>
+    `;
+    actions.querySelector("[data-act=view]").onclick = ()=>viewUser(uid,u);
+    actions.querySelector("[data-act=verify]").onclick = async()=>{ await update(ref(db,`/users/${uid}`),{isVerified:!u.isVerified}); logActivity(`Toggled verify for ${u.name||uid}`,uid); };
+    actions.querySelector("[data-act=suspend]").onclick = async()=>{ await update(ref(db,`/users/${uid}`),{isSuspended:!u.isSuspended}); logActivity(`${u.isSuspended?"Unsuspended":"Suspended"} ${u.name||uid}`,uid); };
+    actions.querySelector("[data-act=notify]").onclick = ()=>notifyUser(uid,u);
+    actions.querySelector("[data-act=delete]").onclick = ()=>{
+      showModal(`<h3>Delete User?<button class="close" onclick="closeModal()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3><p style="color:var(--muted);margin-bottom:18px;">This permanently removes <strong>${escHTML(u.name||uid)}</strong> from the database. The auth account will remain.</p><div style="display:flex;gap:10px;"><button class="btn danger" id="confirm-del">Delete</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+      $("confirm-del").onclick = async ()=>{ await remove(ref(db,`/users/${uid}`)); logActivity(`Deleted user ${u.name||uid}`,uid); closeModal(); showToast("User deleted"); };
+    };
+    row.appendChild(actions);
+    list.appendChild(row);
+  });
+}
+function viewUser(uid,u){
+  showModal(`
+    <h3>User Profile <button class="close" onclick="closeModal()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;"><div class="avatar" id="m-av" style="width:72px;height:72px;font-size:24px;"></div>
+    <div><div style="font-family:'Outfit';font-weight:700;font-size:18px;display:flex;align-items:center;gap:6px;">${escHTML(u.name||"")} ${u.isVerified?'<span class="tag verified" style="display:inline-flex;align-items:center;gap:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><polyline points="4 12 9 17 20 6"/></svg>Verified</span>':''}</div>
+    <div style="color:var(--secondary);font-weight:600;">${escHTML(u.zexId||"")}</div>
+    <div style="color:var(--muted);font-size:13px;">${escHTML(u.email||"")}</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+      <div><strong>Online:</strong> ${u.isOnline?"Yes":"No"}</div>
+      <div><strong>Last Seen:</strong> ${u.lastSeen?new Date(u.lastSeen).toLocaleString():"—"}</div>
+      <div><strong>Created:</strong> ${u.createdAt?new Date(u.createdAt).toLocaleString():"—"}</div>
+      <div><strong>Theme:</strong> ${u.theme||"dark"}</div>
+      <div><strong>Language:</strong> ${u.language||"en"}</div>
+      <div><strong>Suspended:</strong> ${u.isSuspended?"Yes":"No"}</div>
+    </div>
+    <div style="margin-top:14px;"><strong>Bio:</strong><br><div style="color:var(--muted);">${escHTML(u.bio||"—")}</div></div>
+    ${u.link1?`<div style="margin-top:8px;"><a href="${escHTML(u.link1)}" target="_blank">${escHTML(u.link1)}</a></div>`:""}
+    ${u.link2?`<div style="margin-top:4px;"><a href="${escHTML(u.link2)}" target="_blank">${escHTML(u.link2)}</a></div>`:""}
+  `);
+  setAvatarBg($("m-av"), u);
+}
+function notifyUser(uid,u){
+  showModal(`
+    <h3>Send Notification to ${escHTML(u.name||uid)}<button class="close" onclick="closeModal()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>
+    <div class="field"><label>Title</label><input class="input" id="n-title" placeholder="e.g., Welcome!"></div>
+    <div class="field"><label>Message</label><textarea class="input" id="n-message" rows="3"></textarea></div>
+    <button class="btn" id="n-send">Send</button>
+  `);
+  $("n-send").onclick = async ()=>{
+    const t = $("n-title").value.trim(), m = $("n-message").value.trim();
+    if(!t||!m){showToast("Fill in both fields");return;}
+    const r = push(ref(db,`/notifications/${uid}`));
+    await set(r, {title:t, message:m, type:"info", read:false, sentAt:serverTimestamp()});
+    logActivity(`Sent notification to ${u.name||uid}`,uid);
+    closeModal(); showToast("Notification sent");
+  };
+}
+
+/* ============= VERIFICATION ============= */
+$("verify-search").addEventListener("input",e=>{verifySearch=e.target.value.toLowerCase().trim();renderVerifyList();});
+$$("[data-vfilter]").forEach(b=>{
+  b.onclick = ()=>{ $$("[data-vfilter]").forEach(x=>x.classList.remove("active")); b.classList.add("active"); verifyFilter = b.dataset.vfilter; renderVerifyList(); };
+});
+function renderVerifyList(){
+  const list = $("verify-list");
+  let entries = Object.entries(allUsers);
+  if(verifyFilter==="verified") entries = entries.filter(([_,u])=>u.isVerified);
+  else if(verifyFilter==="unverified") entries = entries.filter(([_,u])=>!u.isVerified);
+  if(verifySearch) entries = entries.filter(([_,u])=>(u.name||"").toLowerCase().includes(verifySearch)||(u.zexId||"").toLowerCase().includes(verifySearch));
+  if(entries.length===0){ list.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);">No users.</div>`; return; }
+  list.innerHTML = "";
+  entries.forEach(([uid,u])=>{
+    const row = document.createElement("div"); row.className="user-row";
+    const av = document.createElement("div"); av.className="avatar"; setAvatarBg(av,u);
+    row.appendChild(av);
+    const meta = document.createElement("div"); meta.className="meta";
+    meta.innerHTML = `<div class="name">${escHTML(u.name||"Unnamed")}</div><div class="sub"><span style="color:var(--secondary);">${escHTML(u.zexId||"")}</span></div>`;
+    row.appendChild(meta);
+    const t = document.createElement("div"); t.className="toggle"+(u.isVerified?" on":"");
+    t.onclick = async ()=>{ await update(ref(db,`/users/${uid}`),{isVerified:!u.isVerified}); logActivity(`Toggled verify for ${u.name||uid}`,uid); };
+    row.appendChild(t);
+    list.appendChild(row);
+  });
+}
+$("badge-anim-toggle").onclick = ()=>{ $("badge-anim-toggle").classList.toggle("on"); update(ref(db,'/appSettings'),{badgeAnimation:$("badge-anim-toggle").classList.contains("on")}); };
+$("badge-anim-type").onchange = (e)=>update(ref(db,'/appSettings'),{badgeAnimationType:e.target.value});
+$("badge-upload").addEventListener("change", async (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const path = "badges/verification-badge.png";
+  const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, f, {upsert:true, contentType:f.type});
+  if(error){ showToast("Upload failed: "+error.message,4000); return; }
+  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
+  await update(ref(db,'/appSettings'),{badgeUrl:data.publicUrl+"?v="+Date.now()});
+  showToast("Badge uploaded");
+});
+$("reset-badge").onclick = async ()=>{ await update(ref(db,'/appSettings'),{badgeUrl:""}); const svgTick='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="4 12 9 17 20 6"/></svg>'; $("badge-preview-inline").style.background="var(--primary)"; $("badge-preview-inline").innerHTML=svgTick; $("badge-preview-icon").style.background="var(--primary)"; $("badge-preview-icon").innerHTML=svgTick; showToast("Reset to default"); };
+
+/* ============= BOOKINGS ============= */
+$$("[data-bfilter]").forEach(b=>{
+  b.onclick = ()=>{ $$("[data-bfilter]").forEach(x=>x.classList.remove("active")); b.classList.add("active"); bookingFilter = b.dataset.bfilter; renderBookings(); };
+});
+function renderBookings(){
+  const list = $("bookings-list");
+  let entries = Object.entries(allBookings);
+  if(bookingFilter !== "all") entries = entries.filter(([_,b])=>b.status===bookingFilter);
+  entries.sort((a,b)=>(b[1].submittedAt||0)-(a[1].submittedAt||0));
+  if(entries.length===0){ list.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);">No bookings.</div>`; return; }
+  list.innerHTML = "";
+  entries.forEach(([bid,bk])=>{
+    const u = allUsers[bk.userId] || {};
+    const card = document.createElement("div"); card.className = "user-row"; card.style.flexWrap="wrap";
+    const av = document.createElement("div"); av.className="avatar"; setAvatarBg(av,u);
+    card.appendChild(av);
+    const meta = document.createElement("div"); meta.className="meta";
+    meta.innerHTML = `<div class="name">${escHTML(bk.name||"")} <span class="tag ${bk.status}">${(bk.status||"").toUpperCase()}</span></div>
+    <div class="sub"><span style="color:var(--secondary);">${escHTML(u.zexId||"")}</span><span>${escHTML(bk.email||"")}</span><span style="display:inline-flex;align-items:center;gap:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1A19.5 19.5 0 0 1 5 13.4 19.8 19.8 0 0 1 1.9 4.8 2 2 0 0 1 3.9 2.6h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 10.3a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg>${escHTML(bk.mobile||"")}</span><span>Plan: ${escHTML(bk.plan||"")} · ${escHTML(bk.planPrice||"")}</span><span>${timeAgo(bk.submittedAt)}</span></div>`;
+    card.appendChild(meta);
+    const actions = document.createElement("div"); actions.className="actions";
+    if(bk.status==="pending"){
+      actions.innerHTML = `<button class="btn success sm" data-a="approve">Approve</button><button class="btn danger sm" data-a="reject">Reject</button><button class="btn ghost sm" data-a="del">Delete</button>`;
+      actions.querySelector("[data-a=approve]").onclick = async ()=>{
+        await update(ref(db,`/verificationBookings/${bid}`),{status:"approved",reviewedAt:serverTimestamp()});
+        await update(ref(db,`/users/${bk.userId}`),{isVerified:true});
+        const nr = push(ref(db,`/notifications/${bk.userId}`));
+        await set(nr, {title:"Verification Approved!",message:"Your verification request has been approved! Your badge will appear on your profile shortly.",type:"verification",read:false,sentAt:serverTimestamp()});
+        logActivity(`Approved verification for ${bk.name||bk.userId}`,bk.userId);
+        showToast("Approved & verified");
+      };
+      actions.querySelector("[data-a=reject]").onclick = ()=>{
+        showModal(`<h3>Reject Booking<button class="close" onclick="closeModal()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3><div class="field"><label>Reason (optional)</label><textarea class="input" id="rej-reason" rows="3"></textarea></div><button class="btn danger" id="rej-confirm">Reject</button>`);
+        $("rej-confirm").onclick = async ()=>{
+          const reason = $("rej-reason").value.trim();
+          await update(ref(db,`/verificationBookings/${bid}`),{status:"rejected",rejectionReason:reason,reviewedAt:serverTimestamp()});
+          const nr = push(ref(db,`/notifications/${bk.userId}`));
+          await set(nr, {title:"Verification Not Approved",message:"Your verification request was not approved."+(reason?" Reason: "+reason:""),type:"verification",read:false,sentAt:serverTimestamp()});
+          logActivity(`Rejected verification for ${bk.name||bk.userId}`,bk.userId);
+          closeModal(); showToast("Rejected");
+        };
+      };
+    } else {
+      actions.innerHTML = `<button class="btn ghost sm" data-a="del">Delete</button>`;
+    }
+    if(actions.querySelector("[data-a=del]")) actions.querySelector("[data-a=del]").onclick = async ()=>{ await remove(ref(db,`/verificationBookings/${bid}`)); showToast("Deleted"); };
+    card.appendChild(actions);
+    list.appendChild(card);
+  });
+}
+$("export-csv").onclick = ()=>{
+  const rows = [["ID","Name","Email","Mobile","ZEX ID","Plan","Price","Status","Submitted"]];
+  Object.entries(allBookings).forEach(([id,b])=>{
+    const u = allUsers[b.userId]||{};
+    rows.push([id,b.name||"",b.email||"",b.mobile||"",u.zexId||"",b.plan||"",b.planPrice||"",b.status||"",b.submittedAt?new Date(b.submittedAt).toISOString():""]);
+  });
+  const csv = rows.map(r=>r.map(c=>`"${(""+c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv],{type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="bookings_"+Date.now()+".csv"; a.click();
+  URL.revokeObjectURL(url);
+};
+
+/* ============= NOTIFICATIONS ============= */
+$("notif-target").addEventListener("change",e=>$("specific-user-row").style.display = e.target.value==="specific"?"block":"none");
+$("send-broadcast").onclick = async ()=>{
+  const title = $("notif-title").value.trim(), message = $("notif-message").value.trim(), type = $("notif-type").value, target = $("notif-target").value;
+  if(!title || !message){ showToast("Fill in title and message"); return; }
+  let targetUids = [];
+  if(target==="all") targetUids = Object.keys(allUsers);
+  else if(target==="verified") targetUids = Object.entries(allUsers).filter(([_,u])=>u.isVerified).map(([id])=>id);
+  else if(target==="specific"){
+    const z = $("notif-zexid").value.trim();
+    const found = Object.entries(allUsers).find(([_,u])=>u.zexId===z);
+    if(!found){ showToast("ZEX ID not found"); return; }
+    targetUids = [found[0]];
+  }
+  for(const uid of targetUids){
+    const r = push(ref(db,`/notifications/${uid}`));
+    await set(r, {title, message, type, read:false, sentAt:serverTimestamp()});
+  }
+  const hr = push(ref(db,'/adminSentNotifications'));
+  await set(hr, {title, message, type, recipients:target==="specific"?$("notif-zexid").value:target, sentAt:serverTimestamp()});
+  logActivity(`Sent broadcast "${title}" to ${target}`);
+  $("notif-title").value=""; $("notif-message").value="";
+  showToast(`Sent to ${targetUids.length} users`);
+};
+$("test-self-notif").onclick = async ()=>{
+  if(!currentAdmin) return;
+  const r = push(ref(db,`/notifications/${currentAdmin.uid}`));
+  await set(r, {title:"Test Notification",message:"This is a test notification.",type:"info",read:false,sentAt:serverTimestamp()});
+  showToast("Test notification sent");
+};
+
+/* ============= APP SETTINGS ============= */
+$("set-maint").onclick = ()=>$("set-maint").classList.toggle("on");
+$("set-reg").onclick = ()=>$("set-reg").classList.toggle("on");
+$("save-settings").onclick = async ()=>{
+  await update(ref(db,'/appSettings'),{
+    appName:$("set-app-name").value.trim()||"ZEX Messenger",
+    tagline:$("set-tagline").value.trim(),
+    announcement:$("set-announcement").value.trim(),
+    defaultTheme:$("set-theme").value,
+    maxFileSize:parseInt($("set-maxfile").value)||25,
+    maxMessageLength:parseInt($("set-maxmsg").value)||1000,
+    maintenanceMode:$("set-maint").classList.contains("on"),
+    registrationOpen:$("set-reg").classList.contains("on"),
+    footerText:$("set-footer").value.trim(),
+  });
+  logActivity("Updated app settings");
+  showToast("Settings saved");
+};
+
+/* ============= CONFIG MANAGER ============= */
+function prefillConfig(){
+  $("cfg-firebase").value = JSON.stringify(window.firebaseConfig, null, 2);
+  $("cfg-supa-url").value = window.SUPABASE_URL;
+  $("cfg-supa-key").value = window.SUPABASE_ANON_KEY;
+  $("cfg-bucket").value = BUCKET_NAME;
+  $("cur-bucket").textContent = BUCKET_NAME;
+}
+$("cfg-fb-validate").onclick = ()=>{
+  try{
+    const j = JSON.parse($("cfg-firebase").value);
+    const need = ["apiKey","authDomain","databaseURL","projectId","appId"];
+    const miss = need.filter(k=>!j[k]);
+    if(miss.length) return showToast("Missing keys: "+miss.join(", "));
+    showToast("Valid Firebase config");
+  }catch(e){ showToast("Invalid JSON: "+e.message); }
+};
+$("cfg-fb-apply").onclick = ()=>{
+  try{
+    window.firebaseConfig = JSON.parse($("cfg-firebase").value);
+    showToast("Applied for this session. Paste in HTML to make permanent.",4500);
+  }catch(e){ showToast("Invalid JSON"); }
+};
+$("cfg-fb-copy").onclick = ()=>{ navigator.clipboard.writeText($("cfg-firebase").value); showToast("Copied"); };
+$("cfg-sb-test").onclick = async ()=>{
+  try{
+    const u = $("cfg-supa-url").value.trim(), k = $("cfg-supa-key").value.trim();
+    const sb = window.supabase.createClient(u,k);
+    const { error } = await sb.storage.from(BUCKET_NAME).list("",{limit:1});
+    if(error) throw error;
+    showToast(`Connected · bucket "${BUCKET_NAME}" found`,3500);
+  }catch(e){ showToast(e.message,4500); }
+};
+$("cfg-sb-apply").onclick = ()=>{
+  window.SUPABASE_URL = $("cfg-supa-url").value.trim();
+  window.SUPABASE_ANON_KEY = $("cfg-supa-key").value.trim();
+  supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  showToast("Applied for this session.",3500);
+};
+$("cfg-bucket-apply").onclick = ()=>{
+  BUCKET_NAME = $("cfg-bucket").value.trim()||"zex-messenger";
+  window.BUCKET_NAME = BUCKET_NAME;
+  localStorage.setItem("zex_bucket", BUCKET_NAME);
+  $("cur-bucket").textContent = BUCKET_NAME;
+  showToast("Bucket updated");
+};
+
+/* ============= TEST MODE ============= */
+$("t-notif-self").onclick = ()=>$("test-self-notif").click();
+$("t-notif-all").onclick = async ()=>{
+  for(const uid of Object.keys(allUsers)){
+    const r = push(ref(db,`/notifications/${uid}`));
+    await set(r,{title:"[TEST] Broadcast",message:"This is a test broadcast.",type:"info",read:false,sentAt:serverTimestamp()});
+  }
+  showToast("Test broadcast sent");
+};
+$("t-popup").onclick = ()=>showToast("In-app popup triggered");
+
+$("run-full-test").onclick = async ()=>{
+  const steps = [
+    {desc:"Firebase Auth connection", fn:async()=>{ if(auth.currentUser) return; throw new Error("No user"); }},
+    {desc:"Firebase RTDB read", fn:async()=>{ await get(ref(db,'/appSettings')); }},
+    {desc:"Firebase RTDB write", fn:async()=>{ await set(ref(db,`/testNode/test_${Date.now()}`),"ok"); }},
+    {desc:"Supabase connection", fn:async()=>{ const {error}=await supabase.storage.listBuckets(); if(error) throw error; }},
+    {desc:`Supabase bucket "${BUCKET_NAME}" access`, fn:async()=>{ const {error}=await supabase.storage.from(BUCKET_NAME).list("",{limit:1}); if(error) throw error; }},
+    {desc:"Supabase test upload", fn:async()=>{ const blob = new Blob([new Uint8Array([137,80,78,71])],{type:"image/png"}); const {error}=await supabase.storage.from(BUCKET_NAME).upload(`tests/cfg_${Date.now()}.png`,blob,{upsert:true}); if(error) throw error; }},
+    {desc:"Supabase public URL", fn:async()=>{ const {data} = supabase.storage.from(BUCKET_NAME).getPublicUrl(`tests/test.png`); if(!data.publicUrl) throw new Error("No URL"); }},
+  ];
+  const out = $("test-steps"); out.innerHTML = ""; $("test-result").innerHTML = "";
+  steps.forEach((s,i)=>{ out.innerHTML += `<div class="test-step" id="ts-${i}"><div class="ico pending">…</div><div class="desc">Step ${i+1}: ${s.desc}</div></div>`; });
+  let ok = 0;
+  for(let i=0;i<steps.length;i++){
+    const el = $(`ts-${i}`); const ico = el.querySelector(".ico");
+    ico.className = "ico running"; ico.textContent="…";
+    try{
+      await steps[i].fn();
+      ico.className = "ico ok"; ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="4 12 9 17 20 6"/></svg>'; ok++;
+    }catch(e){
+      ico.className = "ico fail"; ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      el.innerHTML += `<div class="err" style="width:100%;color:var(--danger);font-size:11px;margin-top:4px;">${escHTML(e.message)}</div>`;
+    }
+  }
+  $("test-result").innerHTML = ok===steps.length ? `<span style="color:var(--success);">All systems operational (${ok}/${steps.length})</span>` : `<span style="color:var(--danger);">${steps.length-ok} issue(s) found (${ok}/${steps.length} passed)</span>`;
+};
+
+$("t-db").onclick = async ()=>{
+  const out = $("t-db-out"); out.innerHTML = "";
+  try{
+    const path = `/testNode/db_${Date.now()}`;
+    out.innerHTML += "Writing... "; await set(ref(db,path), "test_"+Date.now()); out.innerHTML += "<svg style="vertical-align:middle;width:14px;height:14px;color:var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg><br>";
+    out.innerHTML += "Reading... "; const s = await get(ref(db,path)); out.innerHTML += s.val()?"<svg style="vertical-align:middle;width:14px;height:14px;color:var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg><br>":"<svg style="vertical-align:middle;width:14px;height:14px;color:var(--danger);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg><br>";
+    out.innerHTML += "Deleting... "; await remove(ref(db,path)); out.innerHTML += "<svg style="vertical-align:middle;width:14px;height:14px;color:var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg><br>";
+    out.innerHTML += '<span style="color:var(--success);">All operations succeeded.</span>';
+  }catch(e){ out.innerHTML += `<span style="color:var(--danger);display:inline-flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M6 6l12 12M18 6L6 18"/></svg>${escHTML(e.message)}</span>`; }
+};
+$("t-storage").onclick = async ()=>{
+  const out = $("t-storage-out"), img = $("t-storage-img");
+  out.innerHTML = ""; img.style.display="none";
+  try{
+    const blob = new Blob([Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEX///+nxBvIAAAAC0lEQVQI12NgAAIAAAUAAeImBZsAAAAASUVORK5CYII="),c=>c.charCodeAt(0))],{type:"image/png"});
+    const path = `tests/storage_${Date.now()}.png`;
+    out.innerHTML += "Uploading... "; const up = await supabase.storage.from(BUCKET_NAME).upload(path,blob,{contentType:"image/png"}); if(up.error) throw up.error; out.innerHTML += "<svg style="vertical-align:middle;width:14px;height:14px;color:var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg><br>";
+    out.innerHTML += "Getting URL... "; const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path); out.innerHTML += "<svg style="vertical-align:middle;width:14px;height:14px;color:var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg><br>";
+    out.innerHTML += "Displaying image... "; img.src = data.publicUrl; img.style.display="inline-block"; out.innerHTML += "<svg style="vertical-align:middle;width:14px;height:14px;color:var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg><br>";
+    out.innerHTML += "Deleting... "; const del = await supabase.storage.from(BUCKET_NAME).remove([path]); if(del.error) throw del.error; out.innerHTML += "<svg style="vertical-align:middle;width:14px;height:14px;color:var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg><br>";
+    out.innerHTML += '<span style="color:var(--success);">All operations succeeded.</span>';
+  }catch(e){ out.innerHTML += `<span style="color:var(--danger);display:inline-flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M6 6l12 12M18 6L6 18"/></svg>${escHTML(e.message)}</span>`; }
+};
+$("t-realtime").onclick = async ()=>{
+  const out = $("t-realtime-out"); out.innerHTML = "Setting up listener...";
+  const path = `/testNode/realtime_${Date.now()}`;
+  const r = ref(db,path);
+  const t0 = performance.now();
+  const cb = (snap)=>{
+    if(snap.val()){
+      const dt = performance.now() - t0;
+      out.innerHTML = `<span style="color:var(--success);">Listener triggered in ${dt.toFixed(1)}ms</span>`;
+      off(r,"value",cb); remove(r);
+    }
+  };
+  onValue(r, cb);
+  setTimeout(()=>set(r, "ping"), 100);
+};
+
+</script>
+
+<!-- ============================================================ -->
+<!-- ===                CONFIGURATION                           === -->
+<!-- ============================================================ -->
+<script>
+  window.firebaseConfig = {
+    apiKey: "AIzaSyD9EzXQkhqDX-Yd_D5VJmKETZ-8eMivsH8",
+    authDomain: "zex-messenger.firebaseapp.com",
+    databaseURL: "https://zex-messenger-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "zex-messenger",
+    storageBucket: "zex-messenger.firebasestorage.app",
+    messagingSenderId: "340980726261",
+    appId: "1:340980726261:web:b0f0cc820c0c828fb088bc"
+  };
+  window.SUPABASE_URL = "https://qpvshtppxloqatqxotqk.supabase.co";
+  window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwdnNodHBweGxvcWF0cXhvdHFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDU1MzcsImV4cCI6MjA5Mjg4MTUzN30.5adG_c6SFtVjj7463GR3120ZSucLgpc_VAffAty22WQ";
+  window.BUCKET_NAME = localStorage.getItem("zex_bucket") || "zex-messenger";
+</script>
+</body>
+</html>
