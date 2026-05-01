@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0F">
+<title>ZEX Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0A0A0F;--surface:#13131A;--card:#1C1C27;--card2:#222234;
+  --primary:#6C63FF;--secondary:#00D9A3;--text:#FFFFFF;--muted:#B0B0C3;
+  --danger:#FF4757;--warning:#FFC857;--success:#00D9A3;--border:rgba(255,255,255,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent!important;outline:none!important;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:'Outfit',sans-serif;font-weight:700;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,textarea,select{font-family:inherit;color:inherit;background:none;border:none;}
+a{color:var(--primary);text-decoration:none;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--card2);border-radius:4px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+@keyframes scaleIn{from{transform:scale(.94);opacity:0;}to{transform:scale(1);opacity:1;}}
+@keyframes countUp{from{transform:translateY(8px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+.screen{position:fixed;inset:0;display:none;flex-direction:column;animation:fadeIn .25s;}
+.screen.active{display:flex;}
+
+/* AUTH */
+.auth-bg{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 30% 20%,#1c1850 0%,var(--bg) 70%);}
+.auth-card{background:var(--surface);border-radius:24px;padding:36px;width:100%;max-width:440px;box-shadow:0 30px 80px rgba(0,0,0,.4);border:1px solid var(--border);}
+.auth-card .logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#6C63FF,#00D9A3);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:800;font-size:28px;color:#fff;margin-bottom:20px;}
+.auth-card h1{font-size:26px;letter-spacing:-.5px;margin-bottom:6px;}
+.auth-card .sub{color:var(--muted);font-size:14px;margin-bottom:24px;}
+.field{position:relative;margin-bottom:14px;}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.input{width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:14px;transition:border-color .2s;}
+.input:focus{border-color:var(--primary);}
+textarea.input{resize:vertical;min-height:80px;}
+select.input{cursor:pointer;}
+.btn{padding:13px 18px;border-radius:12px;background:linear-gradient(135deg,#6C63FF,#5046ff);color:#fff;font-weight:700;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s;min-height:44px;cursor:pointer;}
+.btn.full{width:100%;}
+.btn:active{transform:scale(.97);}
+.btn.ghost{background:var(--card);color:var(--text);}
+.btn.danger{background:linear-gradient(135deg,#ff4757,#e0304a);}
+.btn.success{background:linear-gradient(135deg,#00D9A3,#00b890);}
+.btn.warn{background:linear-gradient(135deg,#FFC857,#e8a81a);color:#1a1a2e;}
+.btn.outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn.sm{padding:8px 12px;font-size:12px;min-height:34px;}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.btn .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+.error-msg{background:rgba(255,71,87,.12);color:var(--danger);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;}
+.error-msg.show{display:block;animation:slideUp .25s;}
+.success-msg{background:rgba(0,217,163,.12);color:var(--success);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;}
+.success-msg.show{display:block;animation:slideUp .25s;}
+.link-row{margin-top:18px;text-align:center;color:var(--muted);font-size:13px;}
+.foot{margin-top:30px;text-align:center;color:var(--muted);font-size:11px;}
+
+/* DASHBOARD LAYOUT */
+.dash{flex-direction:row;}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar .brand{padding:22px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.sidebar .brand .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6C63FF,#00D9A3);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:800;font-size:18px;color:#fff;}
+.sidebar .brand .name{font-family:'Outfit';font-weight:700;font-size:15px;}
+.sidebar .brand .sub{font-size:11px;color:var(--muted);}
+.nav-list{flex:1;padding:14px 10px;overflow-y:auto;}
+.nav-list button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:500;color:var(--muted);margin-bottom:3px;text-align:left;transition:background .15s,color .15s;}
+.nav-list button:hover{background:var(--card);color:var(--text);}
+.nav-list button.active{background:linear-gradient(135deg,rgba(108,99,255,.22),rgba(0,217,163,.22));color:var(--text);font-weight:600;}
+.nav-list .ico{width:20px;height:20px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.sidebar .foot-info{padding:14px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);}
+.topbar .ttl{font-family:'Outfit';font-size:18px;font-weight:700;flex:1;}
+.topbar .who{font-size:13px;color:var(--muted);}
+.topbar .who strong{color:var(--text);}
+.content{flex:1;overflow-y:auto;padding:24px;}
+.content-pane{display:none;animation:fadeIn .25s;}
+.content-pane.active{display:block;}
+
+/* RESPONSIVE */
+.menu-toggle{display:none;width:38px;height:38px;border-radius:10px;background:var(--card);align-items:center;justify-content:center;}
+@media(max-width:768px){
+  .sidebar{position:fixed;inset:0 auto 0 0;z-index:50;transform:translateX(-100%);transition:transform .25s;}
+  .sidebar.show{transform:translateX(0);}
+  .sidebar-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;display:none;}
+  .sidebar-bg.show{display:block;}
+  .menu-toggle{display:flex;}
+  .content{padding:16px;}
+}
+
+/* CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:24px;}
+.stat{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);animation:countUp .3s;}
+.stat .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;}
+.stat .num{font-family:'Outfit';font-size:30px;font-weight:800;margin:6px 0 2px;background:linear-gradient(135deg,#6C63FF,#00D9A3);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.stat .delta{font-size:11px;color:var(--muted);}
+
+.section-title{font-family:'Outfit';font-size:16px;font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:10px;}
+.section-title .count{font-size:12px;color:var(--muted);font-weight:600;background:var(--card);padding:3px 10px;border-radius:10px;}
+.card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);margin-bottom:14px;}
+.card h3{font-size:15px;margin-bottom:10px;}
+.card p{font-size:13px;color:var(--muted);margin-bottom:10px;}
+
+/* TABLE / LIST */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.toolbar .input{flex:1;min-width:200px;}
+.tabs{display:flex;gap:6px;background:var(--card);padding:4px;border-radius:12px;}
+.tabs button{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);}
+.tabs button.active{background:var(--surface);color:var(--text);}
+.user-row{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border-radius:14px;margin-bottom:8px;border:1px solid var(--border);}
+.user-row .avatar{width:42px;height:42px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:700;font-size:14px;color:#fff;flex-shrink:0;position:relative;}
+.user-row .avatar .dot{position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:#666;border:2px solid var(--card);}
+.user-row .avatar .dot.on{background:#00D9A3;}
+.user-row .meta{flex:1;min-width:0;}
+.user-row .name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;}
+.user-row .sub{font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap;}
+.user-row .actions{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.tag.verified{background:rgba(108,99,255,.18);color:var(--primary);}
+.tag.suspended{background:rgba(255,71,87,.18);color:var(--danger);}
+.tag.pending{background:rgba(255,200,87,.18);color:var(--warning);}
+.tag.approved{background:rgba(0,217,163,.18);color:var(--success);}
+.tag.rejected{background:rgba(255,71,87,.18);color:var(--danger);}
+.tag.private{background:rgba(108,99,255,.12);color:var(--primary);}
+
+/* TOGGLE */
+.toggle{position:relative;width:42px;height:24px;background:var(--card2);border-radius:12px;transition:background .2s;flex-shrink:0;cursor:pointer;}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;}
+.toggle.on{background:var(--primary);}
+.toggle.on::after{transform:translateX(18px);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:200;animation:fadeIn .2s;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border-radius:20px;padding:24px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;animation:scaleIn .25s;border:1px solid var(--border);}
+.modal h3{font-size:20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.modal .close{width:32px;height:32px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;}
+
+/* BADGE PREVIEW */
+.badge-preview-area{display:flex;gap:24px;flex-wrap:wrap;align-items:center;padding:18px;background:var(--card2);border-radius:14px;}
+.badge-preview-circle{width:120px;height:120px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;position:relative;}
+.badge-preview-circle .badge{position:absolute;bottom:-4px;right:-4px;width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;border:3px solid var(--card);}
+.badge-preview-circle img.badge{padding:0;background:none;object-fit:contain;}
+.upload-area{border:2px dashed var(--border);border-radius:14px;padding:24px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .2s;}
+.upload-area:hover{border-color:var(--primary);}
+
+/* TEST STEPS */
+.test-step{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border-radius:10px;margin-bottom:6px;}
+.test-step .ico{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.test-step .ico.pending{background:var(--card2);color:var(--muted);}
+.test-step .ico.running{background:var(--card2);color:var(--primary);animation:pulse 1s infinite;}
+.test-step .ico.ok{background:rgba(0,217,163,.18);color:var(--success);}
+.test-step .ico.fail{background:rgba(255,71,87,.18);color:var(--danger);}
+.test-step .desc{flex:1;font-size:13px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card2);color:var(--text);padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;z-index:300;display:none;border:1px solid var(--border);box-shadow:0 12px 30px rgba(0,0,0,.4);}
+.toast.show{display:block;animation:slideUp .25s;}
+
+/* ACTIVITY */
+.activity-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.activity-item:last-child{border-bottom:none;}
+.activity-item .dot{width:8px;height:8px;border-radius:50%;background:var(--primary);margin-top:6px;flex-shrink:0;}
+.activity-item .when{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* CHART AREA */
+.chart-card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);margin-bottom:14px;}
+.chart-card h3{font-size:15px;margin-bottom:14px;}
+
+/* POST ROW */
+.post-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border-radius:14px;margin-bottom:8px;border:1px solid var(--border);}
+.post-row .post-content{flex:1;min-width:0;}
+.post-row .post-text{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.post-row .post-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+.post-row .post-img{width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0;}
+
+/* REPORT ROW */
+.report-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border-radius:14px;margin-bottom:8px;border:1px solid var(--border);}
+.report-row .report-info{flex:1;min-width:0;}
+.report-row .reason{font-size:13px;font-weight:600;}
+.report-row .meta{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* ---- PASSWORD EYE TOGGLE ---- */
+.pw-field{position:relative;}
+.pw-field .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);background:none;border:none;padding:0;z-index:2;}
+.pw-field .eye-btn:active{color:var(--text);}
+.pw-field .input{padding-right:44px!important;}
+</style>
+</head>
+<body>
+
+<!-- ADMIN LOGIN -->
+<div class="screen active" id="admin-login-screen">
+  <div class="auth-bg">
+    <div class="auth-card">
+      <div class="logo">Z</div>
+      <h1>ZEX Admin Panel</h1>
+      <div class="sub">Sign in to manage ZEX GRAM</div>
+      <div class="error-msg" id="login-error"></div>
+      <div class="success-msg" id="login-success"></div>
+      <div class="field"><label>Email</label><input class="input" type="email" id="admin-email" autocomplete="email"></div>
+      <div class="field pw-field"><label>Password</label><input class="input" type="password" id="admin-password" autocomplete="current-password"><button type="button" class="eye-btn" id="eye-admin-pw" aria-label="Show password"></button></div>
+      <a id="admin-forgot" style="font-size:13px;color:var(--primary);font-weight:600;display:inline-block;margin-bottom:14px;cursor:pointer;">Forgot Password?</a>
+      <button class="btn full" id="admin-login-btn">Sign In</button>
+      <div class="link-row">No admin account? <a id="goto-admin-signup" style="cursor:pointer;">Create one</a></div>
+      <div class="foot">ZEX GRAM v2.0 · Admin Panel</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN SIGNUP -->
+<div class="screen" id="admin-signup-screen">
+  <div class="auth-bg">
+    <div class="auth-card">
+      <div class="logo">Z</div>
+      <h1>Create Admin Account</h1>
+      <div class="sub">Admin Secret Key required</div>
+      <div class="error-msg" id="signup-error"></div>
+      <div class="field"><label>Name</label><input class="input" type="text" id="signup-name"></div>
+      <div class="field"><label>Email</label><input class="input" type="email" id="signup-email"></div>
+      <div class="field pw-field"><label>Password</label><input class="input" type="password" id="signup-password" autocomplete="new-password"><button type="button" class="eye-btn" id="eye-signup-pw-adm" aria-label="Show password"></button></div>
+      <div class="field pw-field"><label>Confirm Password</label><input class="input" type="password" id="signup-confirm" autocomplete="new-password"><button type="button" class="eye-btn" id="eye-signup-conf-adm" aria-label="Show password"></button></div>
+      <div class="field"><label>Admin Secret Key</label><input class="input" type="password" id="signup-secret" placeholder="ZEX-ADMIN-2025"></div>
+      <button class="btn full" id="admin-signup-btn">Create Admin</button>
+      <div class="link-row">Already an admin? <a id="goto-admin-login" style="cursor:pointer;">Sign In</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen dash" id="admin-dashboard">
+  <div class="sidebar-bg" id="sidebar-bg"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">Z</div>
+      <div><div class="name">ZEX Admin</div><div class="sub">Messenger Panel</div></div>
+    </div>
+    <nav class="nav-list">
+      <button class="active" data-section="dashboard">
+        <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button data-section="users">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="3"/><path d="M2 21a7 7 0 0 1 14 0M14 21a6 6 0 0 1 8-5.5"/></svg>
+        <span>Users</span>
+      </button>
+      <button data-section="posts">
+        <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        <span>Posts</span>
+      </button>
+      <button data-section="reports">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M12 9v4M12 17h0"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <span>Reports</span>
+      </button>
+      <button data-section="analytics">
+        <svg class="ico" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Analytics</span>
+      </button>
+      <button data-section="verification">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>Verification</span>
+      </button>
+      <button data-section="bookings">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1" fill="currentColor"/><circle cx="3.5" cy="12" r="1" fill="currentColor"/><circle cx="3.5" cy="18" r="1" fill="currentColor"/></svg>
+        <span>Bookings</span>
+      </button>
+      <button data-section="support-chats">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>Support Chats <span id="support-chats-badge" style="display:none;background:#6C63FF;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;"></span></span>
+      </button>
+      <button data-section="notifications">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+        <span>Notifications</span>
+      </button>
+      <button data-section="settings">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span>App Settings</span>
+      </button>
+      <button data-section="config">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M14 4 4 14a2 2 0 0 0 0 3l3 3a2 2 0 0 0 3 0L20 10M14 4l3-2 5 5-2 3M14 4l6 6"/></svg>
+        <span>Config Manager</span>
+      </button>
+      <button data-section="promotions">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span>Promotions</span>
+        </button>
+        <button data-section="vip">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span>VIP Management</span>
+        </button>
+        <button data-section="test">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M9 3h6v3l4 12a3 3 0 0 1-3 4H8a3 3 0 0 1-3-4l4-12V3z"/><path d="M9 3h6"/></svg>
+        <span>Test Mode</span>
+      </button>
+    </nav>
+    <div class="foot-info">
+      <div>Logged in as</div>
+      <div style="color:var(--text);font-weight:600;margin-top:2px;" id="admin-name">—</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menu-toggle" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div class="ttl" id="page-title">Dashboard</div>
+      <div class="who">Welcome, <strong id="admin-name-top">Admin</strong></div>
+      <button class="btn ghost sm" id="admin-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Logout
+      </button>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="content-pane active" id="pane-dashboard">
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat"><div class="lbl">Total Users</div><div class="num" id="s-users">0</div><div class="delta">All registered</div></div>
+          <div class="stat"><div class="lbl">Active Now</div><div class="num" id="s-active">0</div><div class="delta">Currently online</div></div>
+          <div class="stat"><div class="lbl">Total Chats</div><div class="num" id="s-chats">0</div><div class="delta">Active conversations</div></div>
+          <div class="stat"><div class="lbl">Total Posts</div><div class="num" id="s-posts">0</div><div class="delta">Public posts</div></div>
+          <div class="stat"><div class="lbl">Verified</div><div class="num" id="s-verified">0</div><div class="delta">With badge</div></div>
+          <div class="stat"><div class="lbl">Suspended</div><div class="num" id="s-suspended">0</div><div class="delta">Blocked accounts</div></div>
+          <div class="stat"><div class="lbl">Pending Bookings</div><div class="num" id="s-bookings">0</div><div class="delta">Verification requests</div></div>
+          <div class="stat"><div class="lbl">Open Reports</div><div class="num" id="s-reports">0</div><div class="delta">Awaiting review</div></div>
+        </div>
+        <div class="section-title">Recent Activity
+          <button class="btn ghost sm" id="refresh-stats" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Refresh
+          </button>
+        </div>
+        <div class="card" style="padding:0;"><div id="activity-feed" style="max-height:400px;overflow-y:auto;"></div></div>
+      </div>
+
+      <!-- USERS -->
+      <div class="content-pane" id="pane-users">
+        <div class="toolbar">
+          <input class="input" id="user-search" placeholder="Search by name, ZEX ID, or email...">
+          <button class="btn ghost sm" id="users-refresh" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Refresh
+          </button>
+          <button class="btn ghost sm" id="export-users-csv" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export CSV
+          </button>
+        </div>
+        <div class="section-title">All Users <span class="count" id="users-count">0</span></div>
+        <div id="users-list"></div>
+      </div>
+
+      <!-- POSTS MANAGEMENT -->
+      <div class="content-pane" id="pane-posts">
+        <div class="toolbar">
+          <input class="input" id="posts-search" placeholder="Search posts...">
+          <button class="btn ghost sm" id="posts-refresh" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Refresh
+          </button>
+        </div>
+        <div class="section-title">All Posts <span class="count" id="posts-count">0</span></div>
+        <div id="posts-list"></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="content-pane" id="pane-reports">
+        <div class="toolbar">
+          <div class="tabs">
+            <button class="active" data-rfilter="all">All</button>
+            <button data-rfilter="open">Open</button>
+            <button data-rfilter="resolved">Resolved</button>
+          </div>
+          <button class="btn ghost sm" id="export-reports-csv" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export CSV
+          </button>
+        </div>
+        <div class="section-title">Reports <span class="count" id="reports-count">0</span></div>
+        <div id="reports-list"></div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div class="content-pane" id="pane-analytics">
+        <div class="stats-grid">
+          <div class="stat"><div class="lbl">Total Users</div><div class="num" id="a-users">0</div><div class="delta">All time</div></div>
+          <div class="stat"><div class="lbl">New Today</div><div class="num" id="a-today">0</div><div class="delta">Signed up today</div></div>
+          <div class="stat"><div class="lbl">Active (24h)</div><div class="num" id="a-active">0</div><div class="delta">Seen in last 24h</div></div>
+          <div class="stat"><div class="lbl">Total Posts</div><div class="num" id="a-posts">0</div><div class="delta">All posts</div></div>
+        </div>
+        <div class="chart-card">
+          <h3>User Registrations (Last 7 Days)</h3>
+          <canvas id="chart-registrations" height="120"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>User Activity Breakdown</h3>
+          <canvas id="chart-activity" height="120"></canvas>
+        </div>
+        <div class="section-title">Audit Log
+          <button class="btn ghost sm" id="export-audit-csv" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export CSV
+          </button>
+        </div>
+        <div class="card" style="padding:0;"><div id="audit-log" style="max-height:300px;overflow-y:auto;"></div></div>
+      </div>
+
+      <!-- VERIFICATION -->
+      <div class="content-pane" id="pane-verification">
+        <div class="card">
+            <h3>Verification Badge Picker</h3>
+            <p>Choose from 50 built-in badges. Select an icon, color and size — changes apply across the app instantly.</p>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding:14px;background:var(--card2,#1e1e1e);border-radius:12px;">
+              <div id="badge-preview-new" style="width:44px;height:44px;border-radius:50%;background:#6C63FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+              <div>
+                <div style="font-family:'Outfit';font-weight:700;font-size:16px;display:flex;align-items:center;gap:6px;">
+                  Sample User <div id="badge-preview-inline-new" style="width:22px;height:22px;border-radius:50%;background:#6C63FF;display:inline-flex;align-items:center;justify-content:center;"></div>
+                </div>
+                <div style="color:var(--muted);font-size:12px;margin-top:3px;">@sample_user · ZEX-XXXX1234</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="badge-color-picker">
+              <div class="badge-color-swatch" data-color="#6C63FF" style="width:28px;height:28px;border-radius:50%;background:#6C63FF;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#6C63FF"></div><div class="badge-color-swatch" data-color="#00D9A3" style="width:28px;height:28px;border-radius:50%;background:#00D9A3;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#00D9A3"></div><div class="badge-color-swatch" data-color="#FF4757" style="width:28px;height:28px;border-radius:50%;background:#FF4757;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#FF4757"></div><div class="badge-color-swatch" data-color="#FFD700" style="width:28px;height:28px;border-radius:50%;background:#FFD700;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#FFD700"></div><div class="badge-color-swatch" data-color="#FF6B35" style="width:28px;height:28px;border-radius:50%;background:#FF6B35;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#FF6B35"></div><div class="badge-color-swatch" data-color="#00B4D8" style="width:28px;height:28px;border-radius:50%;background:#00B4D8;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#00B4D8"></div><div class="badge-color-swatch" data-color="#FF006E" style="width:28px;height:28px;border-radius:50%;background:#FF006E;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#FF006E"></div><div class="badge-color-swatch" data-color="#8338EC" style="width:28px;height:28px;border-radius:50%;background:#8338EC;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#8338EC"></div><div class="badge-color-swatch" data-color="#FFFFFF" style="width:28px;height:28px;border-radius:50%;background:#FFFFFF;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#FFFFFF"></div><div class="badge-color-swatch" data-color="#C0C0C0" style="width:28px;height:28px;border-radius:50%;background:#C0C0C0;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#C0C0C0"></div><div class="badge-color-swatch" data-color="#CD7F32" style="width:28px;height:28px;border-radius:50%;background:#CD7F32;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#CD7F32"></div><div class="badge-color-swatch" data-color="#1a1a2e" style="width:28px;height:28px;border-radius:50%;background:#1a1a2e;cursor:pointer;border:2px solid transparent;transition:border-color .15s;" title="#1a1a2e"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <label style="font-size:12px;color:var(--muted);font-weight:700;">Size:</label>
+              <select class="input" id="badge-size-select" style="width:auto;padding:6px 12px;font-size:13px;">
+                <option value="18">Small (18px)</option>
+                <option value="22" selected>Medium (22px)</option>
+                <option value="26">Large (26px)</option>
+              </select>
+            </div>
+            <div id="badge-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px;max-height:280px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:10px;"></div>
+            <div style="display:flex;gap:8px;margin-top:14px;">
+              <button class="btn sm" id="save-badge-choice">Save Badge</button>
+              <button class="btn ghost sm" id="reset-badge-default">Reset to Default</button>
+            </div>
+            <style>
+              .badge-gallery-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+              .badge-gallery-item:hover{border-color:var(--primary);}
+              .badge-gallery-item.selected{border-color:var(--primary);background:rgba(108,99,255,.12);}
+              .badge-gallery-item .lbl{font-size:9px;color:var(--muted);text-align:center;max-width:48px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+              .badge-color-swatch.selected{border-color:var(--text,#fff)!important;transform:scale(1.15);}
+            </style>
+          </div>
+
+        <div class="card">
+          <h3>Badge Animation</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
+            <span>Animated Badge</span>
+            <div class="toggle" id="badge-anim-toggle"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+            <span>Animation type:</span>
+            <select class="input" id="badge-anim-type" style="width:auto;padding:8px 12px;">
+              <option value="glow">Glow</option><option value="pulse">Pulse</option><option value="rotate">Rotate</option><option value="sparkle">Sparkle</option>
+            </select>
+          </div>
+          <div style="margin-top:12px;"><button class="btn sm" id="save-badge-settings">Save Badge Settings</button></div>
+        </div>
+
+        <div class="section-title">User Verification Toggle</div>
+        <div class="toolbar">
+          <input class="input" id="verify-search" placeholder="Search users...">
+          <div class="tabs">
+            <button class="active" data-vfilter="all">All</button>
+            <button data-vfilter="verified">Verified</button>
+            <button data-vfilter="unverified">Unverified</button>
+          </div>
+        </div>
+        <div id="verify-list"></div>
+      </div>
+
+      <!-- BOOKINGS -->
+      <div class="content-pane" id="pane-bookings">
+        <div class="stats-grid">
+          <div class="stat"><div class="lbl">Total</div><div class="num" id="bk-total">0</div></div>
+          <div class="stat"><div class="lbl">Pending</div><div class="num" id="bk-pending">0</div></div>
+          <div class="stat"><div class="lbl">Approved</div><div class="num" id="bk-approved">0</div></div>
+          <div class="stat"><div class="lbl">Rejected</div><div class="num" id="bk-rejected">0</div></div>
+        </div>
+        <div class="toolbar">
+          <div class="tabs">
+            <button class="active" data-bfilter="all">All</button>
+            <button data-bfilter="pending">Pending</button>
+            <button data-bfilter="approved">Approved</button>
+            <button data-bfilter="rejected">Rejected</button>
+          </div>
+          <button class="btn ghost sm" id="export-csv" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export CSV
+          </button>
+        </div>
+        <div id="bookings-list"></div>
+      </div>
+
+      <!-- SUPPORT CHATS -->
+      <div class="content-pane" id="pane-support-chats">
+        <div style="display:flex;gap:12px;">
+          <div style="width:280px;min-width:240px;max-width:320px;border-right:1px solid var(--border);padding-right:16px;max-height:calc(100vh - 120px);overflow-y:auto;">
+            <div class="section-title" style="margin-top:0;">Support Inbox <span class="count" id="support-inbox-count">0</span></div>
+            <div id="support-inbox-list"><div style="color:var(--muted);font-size:13px;padding:12px 0;">Loading...</div></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;max-height:calc(100vh - 120px);">
+            <div id="support-chat-header" style="padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;display:none;">
+              <div style="font-family:'Outfit';font-size:16px;font-weight:700;" id="support-chat-user-name">—</div>
+              <div style="font-size:12px;color:var(--muted);" id="support-chat-user-zexid">—</div>
+            </div>
+            <div id="admin-support-msgs" style="flex:1;overflow-y:auto;padding:4px 0;min-height:200px;"></div>
+            <div id="admin-support-input-area" style="display:none;margin-top:12px;display:flex;gap:8px;align-items:flex-end;">
+              <textarea class="input" id="admin-support-input" rows="2" placeholder="Type a reply..." style="flex:1;resize:none;padding:10px 14px;font-size:14px;"></textarea>
+              <button class="btn" id="admin-support-send" style="flex-shrink:0;height:42px;">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="content-pane" id="pane-notifications">
+        <div class="card">
+          <h3>Send Broadcast</h3>
+          <p>Uses bulk multi-path update — no sequential delays regardless of user count.</p>
+          <div class="field"><label>Title</label><input class="input" id="notif-title" placeholder="e.g., New feature alert"></div>
+          <div class="field"><label>Message</label><textarea class="input" id="notif-message" rows="3"></textarea></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:140px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px;">Type</label>
+              <select class="input" id="notif-type"><option value="info">Info</option><option value="warning">Warning</option><option value="announcement">Announcement</option><option value="promotion">Promotion</option></select>
+            </div>
+            <div style="flex:1;min-width:140px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px;">Send To</label>
+              <select class="input" id="notif-target"><option value="all">All Users</option><option value="verified">Verified Only</option><option value="specific">Specific User</option></select>
+            </div>
+          </div>
+          <div class="field" id="specific-user-row" style="display:none;margin-top:10px;"><label>Target ZEX ID</label><input class="input" id="notif-zexid" placeholder="ZEX-XXXXXXXX"></div>
+          <div style="margin-top:14px;display:flex;gap:8px;">
+            <button class="btn" id="send-broadcast">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+              Send Notification
+            </button>
+            <button class="btn ghost" id="test-self-notif">Test to Self</button>
+          </div>
+          <div id="broadcast-status" style="margin-top:10px;font-size:13px;color:var(--muted);display:none;"></div>
+        </div>
+        <div class="section-title">Notification History</div>
+        <div id="notif-history"></div>
+      </div>
+
+      <!-- APP SETTINGS -->
+      <div class="content-pane" id="pane-settings">
+        <div class="card">
+          <h3>App Settings</h3>
+          <p>Changes sync to all user apps in real time via Firebase.</p>
+          <div class="field"><label>App Name</label><input class="input" id="set-app-name"></div>
+          <div class="field"><label>Tagline</label><input class="input" id="set-tagline"></div>
+          <div class="field"><label>Announcement Banner</label><textarea class="input" id="set-announcement" rows="2" placeholder="Empty to hide"></textarea></div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;">
+            <div style="flex:1;min-width:160px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px;">Max File Size (MB)</label><input class="input" type="number" id="set-maxfile" min="1" max="100"></div>
+            <div style="flex:1;min-width:160px;"><label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px;">Max Message Length</label><input class="input" type="number" id="set-maxmsg" min="100"></div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><span>Maintenance Mode</span><div class="toggle" id="set-maint"></div></label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><span>Registration Open</span><div class="toggle on" id="set-reg"></div></label>
+          </div>
+          <div class="field" style="margin-top:14px;"><label>Footer Text</label><textarea class="input" id="set-footer" rows="2"></textarea></div>
+          <div style="margin-top:14px;"><button class="btn" id="save-settings">Save All Settings</button></div>
+        </div>
+      </div>
+
+      <!-- CONFIG MANAGER -->
+      <div class="content-pane" id="pane-config">
+        <div class="card" style="border-color:var(--warning);">
+          <h3 style="display:inline-flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--warning);"><path d="M12 9v4M12 17h0"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+            Configuration Manager
+          </h3>
+          <p>Only modify these if you know what you're doing.</p>
+        </div>
+        <div class="card">
+          <h3>Firebase Config</h3>
+          <div class="field"><label>Firebase Config JSON</label><textarea class="input" id="cfg-firebase" rows="10" style="font-family:monospace;font-size:12px;"></textarea></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost sm" id="cfg-fb-validate">Validate JSON</button><button class="btn sm" id="cfg-fb-apply">Apply (this session)</button><button class="btn ghost sm" id="cfg-fb-copy">Copy</button></div>
+        </div>
+        <div class="card">
+          <h3>Supabase Config</h3>
+          <div class="field"><label>Supabase URL</label><input class="input" id="cfg-supa-url"></div>
+          <div class="field"><label>Supabase Anon Key</label><input class="input" id="cfg-supa-key" type="password"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost sm" id="cfg-sb-test">Test Connection</button><button class="btn sm" id="cfg-sb-apply">Apply (this session)</button></div>
+        </div>
+        <div class="card">
+          <h3>Bucket Name</h3>
+          <p>Active bucket: <strong id="cur-bucket">zex-messenger</strong></p>
+          <div class="field"><label>Bucket Name</label><input class="input" id="cfg-bucket" value="zex-messenger"></div>
+          <button class="btn ghost sm" id="cfg-bucket-apply">Update Bucket</button>
+        </div>
+      </div>
+
+
+        <!-- PROMOTIONS -->
+        <div class="content-pane" id="pane-promotions">
+          <div class="card">
+            <h3>Create Promotion Post</h3>
+            <p>Promotion posts appear in the user app Promotions tab.</p>
+            <div class="field"><label>Title</label><input class="input" id="promo-title" placeholder="e.g., Summer Sale 50% Off"></div>
+            <div class="field"><label>Description</label><textarea class="input" id="promo-desc" rows="3" placeholder="Tell users about this promotion..."></textarea></div>
+            <div class="field"><label>Badge Label (optional)</label><input class="input" id="promo-badge" placeholder="e.g., EXCLUSIVE, LIMITED TIME"></div>
+            <div class="field"><label>CTA Button Label</label><input class="input" id="promo-cta-label" placeholder="e.g., Learn More, Shop Now"></div>
+            <div class="field"><label>CTA URL (optional)</label><input class="input" id="promo-cta-url" placeholder="https://..."></div>
+            <div class="field"><label>Image URL (optional)</label><input class="input" id="promo-img-url" placeholder="https://..."></div>
+            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+              <button class="btn" id="promo-publish">Publish Promotion</button>
+              <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;color:var(--muted);">Active</span><div class="toggle on" id="promo-active-toggle"></div></div>
+            </div>
+            <div id="promo-status" style="margin-top:10px;font-size:13px;color:var(--muted);display:none;"></div>
+          </div>
+          <div class="section-title">Published Promotions <span class="count" id="promos-count">0</span></div>
+          <div id="promos-list"></div>
+        </div>
+
+        <!-- VIP MANAGEMENT -->
+        <div class="content-pane" id="pane-vip">
+          <div class="card">
+            <h3>VIP Tier Global Settings</h3>
+            <p>Toggle each tier on/off globally. Disabled tiers hide VIP styling for all users of that tier in real time.</p>
+            <div style="display:flex;flex-direction:column;gap:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);">
+                <div><div style="font-weight:700;color:#CD7F32;">Bronze (Nova) Tier</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Entry-level VIP — linked to Basic plan</div></div>
+                <div class="toggle on" id="vip-toggle-bronze"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);">
+                <div><div style="font-weight:700;color:#C0C0C0;">Silver Tier</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Premium members — linked to Standard plan</div></div>
+                <div class="toggle on" id="vip-toggle-silver"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;">
+                <div><div style="font-weight:700;color:#FFD700;">Gold (Imperial) Tier</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Elite members — linked to Premium plan</div></div>
+                <div class="toggle on" id="vip-toggle-gold"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Assign VIP to Users</h3>
+            <div class="toolbar"><input class="input" id="vip-search" placeholder="Search by name or ZEX ID..."></div>
+            <div id="vip-user-list"></div>
+          </div>
+        </div>
+        <!-- TEST MODE -->
+      <div class="content-pane" id="pane-test">
+        <div class="card">
+          <h3>Full Config Test</h3>
+          <button class="btn" id="run-full-test">Run Full Config Test</button>
+          <div id="test-steps" style="margin-top:14px;"></div>
+          <div id="test-result" style="margin-top:14px;font-weight:700;"></div>
+        </div>
+        <div class="card">
+          <h3>Database Read/Write/Delete</h3>
+          <button class="btn ghost sm" id="t-db">Run DB Test</button>
+          <div id="t-db-out" style="margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted);"></div>
+        </div>
+        <div class="card">
+          <h3>Storage Upload/URL/Delete</h3>
+          <button class="btn ghost sm" id="t-storage">Run Storage Test</button>
+          <div id="t-storage-out" style="margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted);"></div>
+          <img id="t-storage-img" src="" style="display:none;margin-top:10px;max-width:100px;border-radius:8px;">
+        </div>
+        <div class="card">
+          <h3>Auth State</h3>
+          <div id="t-auth-out" style="font-family:monospace;font-size:12px;color:var(--muted);"></div>
+        </div>
+        <div class="card">
+          <h3>Realtime Listener Latency</h3>
+          <button class="btn ghost sm" id="t-realtime">Run Realtime Test</button>
+          <div id="t-realtime-out" style="margin-top:10px;font-family:monospace;font-size:12px;color:var(--muted);"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL & TOAST -->
+<div class="modal-bg" id="modal-bg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module">
+
+/* ---- EYE TOGGLE HELPER ---- */
+const OPEN_EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const CLOSED_EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function setupEyeToggle(inputId,btnId){const inp=document.getElementById(inputId);const btn=document.getElementById(btnId);if(!inp||!btn)return;btn.innerHTML=OPEN_EYE;btn.addEventListener('click',()=>{const show=inp.type==='password';inp.type=show?'text':'password';btn.innerHTML=show?CLOSED_EYE:OPEN_EYE;});}
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set, get, push, onValue, off, update, remove, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+  /* ============ BADGE SYSTEM ============ */
+  const BADGES = [
+    // Group A — Standard Verification
+    {id:'check',    label:'Checkmark',  svg:'<polyline points="4 12 9 17 20 6"/>'},
+    {id:'check2',   label:'Double-check',svg:'<polyline points="2 11 7 16 14 9"/><polyline points="8 11 13 16 22 5"/>'},
+    {id:'star',     label:'Star',       svg:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'},
+    {id:'shield',   label:'Shield',     svg:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>'},
+    {id:'diamond',  label:'Diamond',    svg:'<rect x="3" y="3" width="18" height="18" rx="2" transform="rotate(45 12 12)"/>'},
+    {id:'crown',    label:'Crown',      svg:'<polygon points="2 20 22 20 19 8 14 14 12 6 10 14 5 8 2 20"/>'},
+    {id:'bolt',     label:'Lightning',  svg:'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'},
+    {id:'fire',     label:'Fire',       svg:'<path d="M12 2c0 6-6 8-6 14a6 6 0 0 0 12 0c0-4-2-6-4-9-1 2-2 3-2 5-2-2-3-4-3-6 0-2.5 1.5-3.5 3-4z"/>'},
+    {id:'infinity', label:'Infinity',   svg:'<path d="M12 12c-2-2.5-4-4-6-4a4 4 0 0 0 0 8c2 0 4-1.5 6-4zm0 0c2 2.5 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.5-6 4z"/>'},
+    {id:'heart',    label:'Heart',      svg:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>'},
+    // Group B — Social/Status
+    {id:'globe',    label:'Globe',      svg:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'},
+    {id:'mic',      label:'Mic',        svg:'<rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>'},
+    {id:'camera',   label:'Camera',     svg:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'},
+    {id:'music',    label:'Music',      svg:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'},
+    {id:'headphone',label:'Headphones', svg:'<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>'},
+    {id:'radio',    label:'Broadcast',  svg:'<circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>'},
+    {id:'award',    label:'Award',      svg:'<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>'},
+    {id:'trophy',   label:'Trophy',     svg:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'},
+    {id:'zap2',     label:'Power',      svg:'<circle cx="12" cy="12" r="10"/><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'},
+    {id:'compass',  label:'Compass',    svg:'<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>'},
+    // Group C — Special/Premium
+    {id:'gem',      label:'Gem',        svg:'<polygon points="6 3 18 3 22 9 12 22 2 9 6 3"/><polyline points="2 9 12 22 22 9"/><line x1="6" y1="3" x2="12" y2="22"/><line x1="18" y1="3" x2="12" y2="22"/>'},
+    {id:'sun',      label:'Sun',        svg:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'},
+    {id:'moon',     label:'Moon',       svg:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'},
+    {id:'snowflake',label:'Snowflake',  svg:'<line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><path d="m20 16-4-4 4-4M4 8l4 4-4 4m12-12-4 4-4-4M8 20l4-4 4 4"/>'},
+    {id:'feather',  label:'Feather',    svg:'<path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>'},
+    {id:'anchor',   label:'Anchor',     svg:'<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>'},
+    {id:'flag',     label:'Flag',       svg:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>'},
+    {id:'key',      label:'Key',        svg:'<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>'},
+    {id:'leaf',     label:'Leaf',       svg:'<path d="M2 22c1.25-5 4.5-9 9-11 0 4.5-2.5 8.5-9 11z"/><path d="M16 8c0 5-3 9-9 14 4.5 0 9-3 13-7 0-3-1.5-5-4-7z"/>'},
+    {id:'cloud',    label:'Cloud',      svg:'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>'},
+    {id:'eye',      label:'Eye',        svg:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'},
+    // Group D — Minimal/Elite
+    {id:'circle1',  label:'Dot',        svg:'<circle cx="12" cy="12" r="4"/>'},
+    {id:'cross',    label:'Plus',       svg:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'},
+    {id:'x',        label:'X',          svg:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'},
+    {id:'hexagon',  label:'Hexagon',    svg:'<polygon points="21 16 12 21 3 16 3 8 12 3 21 8 21 16"/>'},
+    {id:'octagon',  label:'Octagon',    svg:'<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>'},
+    {id:'triangle', label:'Triangle',   svg:'<polygon points="12 2 22 20 2 20 12 2"/>'},
+    {id:'activity', label:'Pulse',      svg:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+    {id:'zap3',     label:'Power3',     svg:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'},
+    {id:'target',   label:'Target',     svg:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>'},
+    {id:'link',     label:'Link',       svg:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'},
+    {id:'codebadge',label:'Code',       svg:'<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'},
+    {id:'cpu',      label:'CPU',        svg:'<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>'},
+    {id:'atom',     label:'Atom',       svg:'<circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5z"/><path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5z"/>'},
+    {id:'wifi',     label:'Wifi',       svg:'<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/>'},
+    {id:'send',     label:'Send',       svg:'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>'},
+    {id:'bell',     label:'Bell',       svg:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'},
+    {id:'zap4',     label:'Zap4',       svg:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'},
+    {id:'map',      label:'Map Pin',    svg:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'},
+    {id:'sparkles', label:'Sparkles',   svg:'<path d="M12 3L13.5 8.5L19 10L13.5 11.5L12 17L10.5 11.5L5 10L10.5 8.5L12 3Z"/><path d="M19 17l.5 2 2 .5-2 .5-.5 2-.5-2-2-.5 2-.5.5-2Z"/>'},
+    {id:'verified2',label:'Verified V', svg:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'},
+  ];
+
+  function getBadgeSvg(config,sz){
+    const size=sz||config.badgeSize||22;
+    const b=BADGES.find(b=>b.id===(config.badgeType||'check'))||BADGES[0];
+    const innerSz=Math.round(size*0.55);
+    const bgColor=config.badgeColor||'#6C63FF';
+    const fgColor=(bgColor==='#FFFFFF'||bgColor==='#C0C0C0')?'#000000':'#ffffff';
+    return '<div class="verified" style="width:'+size+'px;height:'+size+'px;background:'+bgColor+';border:2px solid var(--card,#242424);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">'+'<svg viewBox="0 0 24 24" fill="none" stroke="'+fgColor+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:'+innerSz+'px;height:'+innerSz+'px;">'+b.svg+'</svg></div>';
+  }
+  
+const ADMIN_SECRET_KEY = "ZEX-ADMIN-2025";
+  /* EYE TOGGLE — admin auth forms */
+  document.querySelectorAll(".eye[data-target]").forEach(btn=>{
+    btn.addEventListener("click",()=>{const t=document.getElementById(btn.dataset.target);if(t)t.type=t.type==="password"?"text":"password";});
+  });
+  
+
+let fbApp = initializeApp(window.firebaseConfig);
+let auth = getAuth(fbApp);
+let db = getDatabase(fbApp);
+let supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+let BUCKET_NAME = window.BUCKET_NAME || "zex-messenger";
+
+let currentAdmin = null;
+let currentSection = "dashboard";
+let allUsers = {};
+let allBookings = {};
+let allPosts = {};
+let allReports = {};
+let allAuditLogs = {};
+let bookingFilter = "all";
+let verifyFilter = "all";
+let reportFilter = "all";
+let chartReg = null, chartActivity = null;
+
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+function escHTML(s){const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML;}
+function timeAgo(ts){if(!ts)return"";const d=new Date(ts),now=new Date(),diff=(now-d)/1000;if(diff<60)return"just now";if(diff<3600)return Math.floor(diff/60)+"m ago";if(diff<86400)return Math.floor(diff/3600)+"h ago";return d.toLocaleDateString();}
+function avatarInit(name){if(!name)return"?";return name.split(/\s+/).map(s=>s[0]||"").join("").slice(0,2).toUpperCase();}
+function avatarColor(seed){const c=["#6C63FF","#00D9A3","#FF8C42","#FF4757","#54A0FF","#FFC857","#A55EEA","#26C6DA"];let h=0;for(const ch of(seed||""))h=(h*31+ch.charCodeAt(0))>>>0;return c[h%c.length];}
+function setAvatarEl(el,u){if(u&&u.pfp){el.style.background=`url(${u.pfp}) center/cover`;el.textContent="";}else{el.style.background=avatarColor(u?.zexId||u?.name||"");el.textContent=avatarInit(u?.name||"");}}
+function showToast(msg,t=2400){const e=$("toast");e.textContent=msg;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),t);}
+function showError(id,msg){const e=$(id);e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),6000);}
+function showSuccess(id,msg){const e=$(id);e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),5000);}
+function setLoading(btn,loading){if(loading){btn._orig=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';}else{btn.disabled=false;btn.innerHTML=btn._orig;}}
+function showScreen(id){$$(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active");}
+function showModal(html){$("modal").innerHTML=html;$("modal-bg").classList.add("show");}
+function closeModal(){$("modal-bg").classList.remove("show");}
+window.closeModal=closeModal;
+$("modal-bg").addEventListener("click",e=>{if(e.target.id==="modal-bg")closeModal();});
+
+/* ============ AUTH ============ */
+$("goto-admin-signup").onclick=()=>showScreen("admin-signup-screen");
+$("goto-admin-login").onclick=()=>showScreen("admin-login-screen");
+
+$("admin-login-btn").onclick=async()=>{
+  const e=$("admin-email").value.trim(),p=$("admin-password").value;
+  if(!e||!p){showError("login-error","Please fill in both fields.");return;}
+  const btn=$("admin-login-btn"); setLoading(btn,true);
+  try{
+    await signInWithEmailAndPassword(auth,e,p);
+    // Auth state will check /admins/ and handle failure
+  }catch(err){showError("login-error",friendlyAuth(err));setLoading(btn,false);}
+};
+
+$("admin-forgot").onclick=async()=>{
+  const e=$("admin-email").value.trim();
+  if(!e){showError("login-error","Enter your email first.");return;}
+  try{await sendPasswordResetEmail(auth,e);showSuccess("login-success","Password reset email sent.");}
+  catch(err){showError("login-error",friendlyAuth(err));}
+};
+
+$("admin-signup-btn").onclick=async()=>{
+  const name=$("signup-name").value.trim(),e=$("signup-email").value.trim(),p=$("signup-password").value,c=$("signup-confirm").value,k=$("signup-secret").value;
+  if(!name||!e||!p){showError("signup-error","All fields required.");return;}
+  if(p!==c){showError("signup-error","Passwords don't match.");return;}
+  if(p.length<6){showError("signup-error","Password too short (min 6).");return;}
+  if(k!==ADMIN_SECRET_KEY){showError("signup-error","Invalid Admin Secret Key.");return;}
+  const btn=$("admin-signup-btn"); setLoading(btn,true);
+  try{
+    const cred=await createUserWithEmailAndPassword(auth,e,p);
+    await set(ref(db,`/admins/${cred.user.uid}`),{name,email:e,createdAt:serverTimestamp(),role:"admin"});
+    await logActivity(`Admin account created: ${name}`,cred.user.uid);
+  }catch(err){showError("signup-error",friendlyAuth(err));setLoading(btn,false);}
+};
+
+function friendlyAuth(e){
+  const c=e.code||"";
+  if(c.includes("invalid-email"))return"Invalid email format.";
+  if(c.includes("user-not-found"))return"No admin account found with this email.";
+  if(c.includes("wrong-password")||c.includes("invalid-credential"))return"Wrong email or password.";
+  if(c.includes("email-already"))return"Email already in use.";
+  if(c.includes("weak-password"))return"Password too weak.";
+  return e.message||"Something went wrong.";
+}
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){showScreen("admin-login-screen");return;}
+  // Check /admins/ record — explicit error, no silent failure
+  const adminSnap=await get(ref(db,`/admins/${user.uid}`));
+  if(!adminSnap.exists()){
+    showError("login-error","Access denied: this account is not registered as an admin.");
+    await signOut(auth);
+    showScreen("admin-login-screen");
+    return;
+  }
+  currentAdmin={uid:user.uid,...adminSnap.val()};
+  $("admin-name").textContent=currentAdmin.name||currentAdmin.email;
+  $("admin-name-top").textContent=currentAdmin.name||"Admin";
+  $("t-auth-out").textContent=`Logged in as ${user.email} (uid: ${user.uid})`;
+  showScreen("admin-dashboard");
+  bootDashboard();
+});
+
+$("admin-logout").onclick=()=>signOut(auth);
+
+/* ============ NAV ============ */
+$$(".nav-list button").forEach(b=>{
+  b.onclick=()=>{
+    $$(".nav-list button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    const s=b.dataset.section; currentSection=s;
+    $$(".content-pane").forEach(p=>p.classList.remove("active"));
+    $("pane-"+s).classList.add("active");
+    $("page-title").textContent=b.querySelector("span").textContent;
+    $("sidebar").classList.remove("show"); $("sidebar-bg").classList.remove("show");
+    if(s==="analytics") renderAnalytics();
+    if(s==="support-chats") loadSupportInbox();
+    if(s==="vip") renderVipList();
+      if(s==="verification") initBadgeGallery();
+  };
+});
+$("menu-toggle").onclick=()=>{$("sidebar").classList.add("show");$("sidebar-bg").classList.add("show");};
+$("sidebar-bg").onclick=()=>{$("sidebar").classList.remove("show");$("sidebar-bg").classList.remove("show");};
+
+/* ============ BOOT ============ */
+function bootDashboard(){
+  // Users live
+  onValue(ref(db,'/users'),snap=>{
+    allUsers=snap.val()||{};
+    renderStats();
+    renderUsers();
+    renderVerifyList();
+    if(currentSection==="analytics") renderAnalytics();
+  });
+  // Bookings live
+  onValue(ref(db,'/verificationBookings'),snap=>{
+    allBookings=snap.val()||{};
+    renderBookings();
+    renderStats();
+  });
+  // Posts live
+  onValue(ref(db,'/posts'),snap=>{
+    allPosts=snap.val()||{};
+    renderPosts();
+    renderStats();
+  });
+  // Reports live
+  onValue(ref(db,'/reports'),snap=>{
+    allReports=snap.val()||{};
+    renderReports();
+    renderStats();
+  });
+  // Activity log live
+  onValue(ref(db,'/adminLogs'),snap=>{
+    allAuditLogs=snap.val()||{};
+    const data=allAuditLogs;
+    const entries=Object.entries(data).sort((a,b)=>(b[1].timestamp||0)-(a[1].timestamp||0)).slice(0,30);
+    const f=$("activity-feed");
+    if(entries.length===0){f.innerHTML=`<div style="padding:30px;text-align:center;color:var(--muted);">No activity yet.</div>`;return;}
+    f.innerHTML=entries.map(([id,a])=>`<div class="activity-item"><div class="dot"></div><div style="flex:1;"><div>${escHTML(a.action)}</div><div class="when">${timeAgo(a.timestamp)}</div></div></div>`).join("");
+    // Also update audit log in analytics
+    const aud=$("audit-log");
+    if(aud) aud.innerHTML=entries.map(([id,a])=>`<div class="activity-item"><div class="dot"></div><div style="flex:1;"><div>${escHTML(a.action)}</div><div class="when">${timeAgo(a.timestamp)}${a.adminUid?` · Admin: ${escHTML(a.adminUid.slice(0,8))}...`:" "}</div></div></div>`).join("");
+  });
+  // App settings live
+  onValue(ref(db,'/appSettings'),snap=>{
+    const s=snap.val()||{};
+    $("set-app-name").value=s.appName||"ZEX GRAM";
+    $("set-tagline").value=s.tagline||"Connect. Chat. Verify.";
+    $("set-announcement").value=s.announcement||"";
+    $("set-maxfile").value=s.maxFileSize||25;
+    $("set-maxmsg").value=s.maxMessageLength||1000;
+    $("set-footer").value=s.footerText||"Designed by ZEX Core";
+    $("set-maint").classList.toggle("on",!!s.maintenanceMode);
+    $("set-reg").classList.toggle("on",s.registrationOpen!==false);
+    $("badge-anim-toggle").classList.toggle("on",!!s.badgeAnimation);
+    if(s.badgeAnimationType) $("badge-anim-type").value=s.badgeAnimationType;
+    if(s.badgeUrl) applyBadgePreview(s.badgeUrl);
+  });
+  // Notification history live
+  onValue(ref(db,'/adminSentNotifications'),snap=>{
+    const data=snap.val()||{};
+    const entries=Object.entries(data).sort((a,b)=>(b[1].sentAt||0)-(a[1].sentAt||0));
+    const list=$("notif-history");
+    if(entries.length===0){list.innerHTML=`<div class="card" style="text-align:center;color:var(--muted);">No notifications sent yet.</div>`;return;}
+    list.innerHTML=entries.map(([id,n])=>`
+      <div class="card" style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:1;"><div style="font-weight:700;font-size:14px;">${escHTML(n.title)}</div><div style="color:var(--muted);font-size:13px;margin-top:4px;">${escHTML(n.message)}</div><div style="font-size:11px;color:var(--muted);margin-top:8px;">To: ${escHTML(n.recipients||"all")} · ${timeAgo(n.sentAt)}</div></div>
+        <button class="btn ghost sm" onclick="deleteNotifHistory('${id}')">Delete</button>
+      </div>`).join("");
+  });
+}
+
+window.deleteNotifHistory=async(id)=>{ await remove(ref(db,`/adminSentNotifications/${id}`)); showToast("Deleted"); };
+
+async function logActivity(action,adminUid){
+  await push(ref(db,'/adminLogs'),{action,adminUid:adminUid||currentAdmin?.uid||"unknown",timestamp:serverTimestamp()});
+}
+
+/* ============ STATS ============ */
+function renderStats(){
+  const users=Object.values(allUsers);
+  $("s-users").textContent=users.length;
+  $("s-active").textContent=users.filter(u=>u.isOnline).length;
+  $("s-verified").textContent=users.filter(u=>u.isVerified).length;
+  $("s-suspended").textContent=users.filter(u=>u.isSuspended).length;
+  $("s-bookings").textContent=Object.values(allBookings).filter(b=>b.status==="pending").length;
+  $("s-posts").textContent=Object.keys(allPosts).length;
+  $("s-reports").textContent=Object.values(allReports).filter(r=>r.status==="open"||!r.status).length;
+  // Count chats (approximation from users)
+  $("s-chats").textContent="—";
+}
+
+/* ============ USERS ============ */
+function renderUsers(){
+  const q=($("user-search")?.value||"").trim().toLowerCase();
+  const entries=Object.entries(allUsers).filter(([uid,u])=>{
+    if(!q) return true;
+    return (u.name||"").toLowerCase().includes(q)||(u.zexId||"").toLowerCase().includes(q)||(u.email||"").toLowerCase().includes(q);
+  });
+  $("users-count").textContent=entries.length;
+  const list=$("users-list");
+  if(entries.length===0){list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">No users found.</div>`;return;}
+  list.innerHTML=entries.map(([uid,u])=>`
+    <div class="user-row">
+      <div class="avatar" id="av-${uid}" style="background:${avatarColor(u.zexId||u.name||"")};">
+        ${u.pfp?"":`${avatarInit(u.name||"")}`}
+        <div class="dot${u.isOnline?" on":""}"></div>
+      </div>
+      <div class="meta">
+        <div class="name">${escHTML(u.name||"Unknown")}
+          ${u.isVerified?`<span class="tag verified">Verified</span>`:""}
+          ${u.isSuspended?`<span class="tag suspended">Suspended</span>`:""}
+          ${u.isPrivate?`<span class="tag private">Private</span>`:""}
+        </div>
+        <div class="sub">
+          <span>${escHTML(u.zexId||"")}</span>
+          <span>${escHTML(u.email||"")}</span>
+          <span>${timeAgo(u.createdAt)}</span>
+          <span>Followers: ${u.followerCount||0}</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn ${u.isVerified?"ghost":"success"} sm" onclick="toggleVerify('${uid}',${!u.isVerified},'${escHTML(u.name||"")}')">${u.isVerified?"Unverify":"Verify"}</button>
+        <button class="btn ${u.isSuspended?"warn":"danger"} sm" onclick="openSuspendModal('${uid}','${escHTML(u.name||"")}',${u.isSuspended})">${u.isSuspended?"Unsuspend":"Suspend"}</button>
+        <button class="btn ghost sm" onclick="togglePromoAccess('${uid}','${escHTML(u.name||"")}',${!u.promotionAccess})" title="${u.promotionAccess?'Remove promo access':'Give promo access'}" style="font-size:11px;">${u.promotionAccess?"No Promo":"Promo"}</button>
+          <button class="btn ghost sm" onclick="deleteUserPermanently('${uid}','${escHTML(u.name||"")}')">Delete</button>
+      </div>
+    </div>`).join("");
+  // Set PFP backgrounds
+  entries.forEach(([uid,u])=>{if(u.pfp){const el=$(`av-${uid}`);if(el){el.style.background=`url(${u.pfp}) center/cover`;el.childNodes.forEach(n=>{if(n.nodeType===3)n.remove();});}}});
+}
+
+$("user-search").addEventListener("input",renderUsers);
+$("users-refresh").onclick=renderUsers;
+
+window.toggleVerify=async(uid,verify,name)=>{
+  await update(ref(db,`/users/${uid}`),{isVerified:verify});
+  await logActivity(`${verify?"Verified":"Unverified"} user: ${name}`);
+  showToast(verify?"User verified!":"Verification removed.");
+};
+
+window.openSuspendModal=async(uid,name,isSuspended)=>{
+  if(isSuspended){
+    if(!confirm(`Unsuspend "${name}"?`)) return;
+    await update(ref(db,`/users/${uid}`),{isSuspended:false,suspendReason:null,suspendDuration:null});
+    await logActivity(`Unsuspended user: ${name}`);
+    showToast("User unsuspended.");
+    return;
+  }
+  showModal(`<h3>Suspend "${escHTML(name)}"<button class="close" onclick="closeModal()">×</button></h3>
+    <div class="field"><label>Reason</label><select class="input" id="sus-reason">
+      <option value="Spam">Spam</option>
+      <option value="Harassment">Harassment</option>
+      <option value="Inappropriate content">Inappropriate content</option>
+      <option value="Fake account">Fake account</option>
+      <option value="Policy violation">Policy violation</option>
+      <option value="Other">Other</option>
+    </select></div>
+    <div class="field"><label>Custom Reason (optional)</label><input class="input" id="sus-custom" placeholder="Add more details..."></div>
+    <div class="field"><label>Duration</label><select class="input" id="sus-dur">
+      <option value="24 hours">24 hours</option>
+      <option value="3 days">3 days</option>
+      <option value="7 days">7 days</option>
+      <option value="30 days">30 days</option>
+      <option value="Permanent">Permanent</option>
+    </select></div>
+    <button class="btn danger" style="margin-top:8px;" id="confirm-suspend">Confirm Suspend</button>`);
+  document.getElementById("confirm-suspend").onclick=async()=>{
+    const reason=document.getElementById("sus-reason").value+(document.getElementById("sus-custom").value?" – "+document.getElementById("sus-custom").value:"");
+    const duration=document.getElementById("sus-dur").value;
+    await update(ref(db,`/users/${uid}`),{isSuspended:true,suspendReason:reason,suspendDuration:duration,suspendedAt:serverTimestamp()});
+    await logActivity(`Suspended user: ${name} (${duration}) – ${reason}`);
+    closeModal(); showToast("User suspended.");
+  };
+};
+
+
+  window.togglePromoAccess=async(uid,name,grant)=>{
+    await update(ref(db,`/users/${uid}`),{promotionAccess:grant});
+    await logActivity(`${grant?"Granted":"Removed"} promotion access for ${name}`);
+    showToast(grant?"Promo access granted!":"Promo access removed.");
+  };
+  window.deleteUserPermanently=async(uid,name)=>{
+  if(!confirm(`Permanently delete user "${name}"? This cannot be undone.`)) return;
+  await remove(ref(db,`/users/${uid}`));
+  await logActivity(`Deleted user: ${name} (${uid})`);
+  showToast("User deleted.");
+};
+
+/* CSV EXPORT — USERS */
+$("export-users-csv").onclick=()=>{
+  const rows=[["UID","Name","ZEX ID","Email","Verified","Suspended","Online","Created","Followers","Following"]];
+  Object.entries(allUsers).forEach(([uid,u])=>{
+    rows.push([uid,u.name||"",u.zexId||"",u.email||"",u.isVerified?"Yes":"No",u.isSuspended?"Yes":"No",u.isOnline?"Yes":"No",u.createdAt?new Date(u.createdAt).toLocaleDateString():"",u.followerCount||0,u.followingCount||0]);
+  });
+  downloadCSV(rows,"zex_users.csv");
+};
+
+/* ============ POSTS MANAGEMENT ============ */
+function renderPosts(){
+  const q=($("posts-search")?.value||"").trim().toLowerCase();
+  const entries=Object.entries(allPosts).filter(([pid,p])=>{
+    if(!q) return true;
+    return (p.text||"").toLowerCase().includes(q)||(p.authorName||"").toLowerCase().includes(q);
+  }).sort((a,b)=>(b[1].timestamp||0)-(a[1].timestamp||0));
+  $("posts-count").textContent=entries.length;
+  const list=$("posts-list");
+  if(entries.length===0){list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">No posts found.</div>`;return;}
+  list.innerHTML=entries.map(([pid,p])=>`
+    <div class="post-row">
+      ${p.imageUrl?`<img class="post-img" src="${escHTML(p.imageUrl)}" alt="post">`:""}
+      <div class="post-content">
+        <div class="post-text">${escHTML(p.text||"(no text)")}</div>
+        <div class="post-meta">By ${escHTML(p.authorName||"Unknown")} · ${timeAgo(p.timestamp)} · ${Object.keys(p.likes||{}).length} likes · ${Object.keys(p.comments||{}).length} comments</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn danger sm" onclick="deletePost('${pid}','${escHTML(p.authorName||"")}')">Delete</button>
+        <button class="btn warn sm" onclick="flagPost('${pid}')">Flag</button>
+        <button class="btn ghost sm" onclick="reportUserFromPost('${escHTML(p.uid||"")}','${escHTML(p.authorName||"")}')">Report User</button>
+      </div>
+    </div>`).join("");
+}
+
+$("posts-search")?.addEventListener("input",renderPosts);
+$("posts-refresh").onclick=renderPosts;
+
+window.deletePost=async(pid,authorName)=>{
+  if(!confirm("Delete this post?")) return;
+  await remove(ref(db,`/posts/${pid}`));
+  await logActivity(`Deleted post by ${authorName}`);
+  showToast("Post deleted.");
+};
+window.flagPost=async(pid)=>{
+  await update(ref(db,`/posts/${pid}`),{flagged:true,flaggedAt:serverTimestamp(),flaggedBy:currentAdmin?.uid||"admin"});
+  showToast("Post flagged.");
+};
+window.reportUserFromPost=async(uid,name)=>{
+  if(!uid){showToast("No user ID available");return;}
+  await push(ref(db,'/reports'),{reportedUid:uid,reportedName:name,reason:"Flagged via post",reportedBy:"admin",status:"open",timestamp:serverTimestamp()});
+  showToast("User reported for review.");
+};
+
+/* ============ REPORTS ============ */
+function renderReports(){
+  const entries=Object.entries(allReports).filter(([rid,r])=>{
+    if(reportFilter==="all") return true;
+    if(reportFilter==="open") return !r.status||r.status==="open";
+    if(reportFilter==="resolved") return r.status==="resolved";
+    return true;
+  }).sort((a,b)=>(b[1].timestamp||0)-(a[1].timestamp||0));
+  $("reports-count").textContent=entries.length;
+  const list=$("reports-list");
+  if(entries.length===0){list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">No reports found.</div>`;return;}
+  list.innerHTML=entries.map(([rid,r])=>`
+    <div class="report-row">
+      <div class="report-info">
+        <div class="reason">${escHTML(r.reason||"No reason")}</div>
+        <div class="meta">Reported: <strong>${escHTML(r.reportedName||r.reportedUid||"Unknown")}</strong> · By: ${escHTML(r.reportedBy||"user")} · ${timeAgo(r.timestamp)}</div>
+        ${r.status==="resolved"?`<span class="tag approved" style="margin-top:4px;display:inline-block;">Resolved</span>`:`<span class="tag pending" style="margin-top:4px;display:inline-block;">Open</span>`}
+      </div>
+      <div style="display:flex;gap:6px;flex-direction:column;">
+        ${r.status!=="resolved"?`<button class="btn success sm" onclick="resolveReport('${rid}')">Resolve</button>`:""}
+        ${r.reportedUid?`<button class="btn danger sm" onclick="openSuspendModal('${r.reportedUid}','${escHTML(r.reportedName||"")}',false)">Suspend</button>`:""}
+        <button class="btn ghost sm" onclick="deleteReport('${rid}')">Delete</button>
+      </div>
+    </div>`).join("");
+}
+
+$$("[data-rfilter]").forEach(b=>{
+  b.onclick=()=>{$$("[data-rfilter]").forEach(x=>x.classList.remove("active"));b.classList.add("active");reportFilter=b.dataset.rfilter;renderReports();};
+});
+
+window.resolveReport=async(rid)=>{
+  await update(ref(db,`/reports/${rid}`),{status:"resolved",resolvedAt:serverTimestamp(),resolvedBy:currentAdmin?.uid||"admin"});
+  await logActivity(`Resolved report ${rid}`);
+  showToast("Report resolved.");
+};
+window.deleteReport=async(rid)=>{await remove(ref(db,`/reports/${rid}`));showToast("Report deleted.");};
+
+$("export-reports-csv").onclick=()=>{
+  const rows=[["Report ID","Reported User","Reported UID","Reason","Reporter","Status","Date"]];
+  Object.entries(allReports).forEach(([rid,r])=>{rows.push([rid,r.reportedName||"",r.reportedUid||"",r.reason||"",r.reportedBy||"",r.status||"open",r.timestamp?new Date(r.timestamp).toLocaleDateString():""]);});
+  downloadCSV(rows,"zex_reports.csv");
+};
+
+/* ============ ANALYTICS ============ */
+function renderAnalytics(){
+  const users=Object.values(allUsers);
+  $("a-users").textContent=users.length;
+  const today=new Date(); today.setHours(0,0,0,0);
+  $("a-today").textContent=users.filter(u=>u.createdAt&&new Date(u.createdAt)>=today).length;
+  const h24=Date.now()-86400000;
+  $("a-active").textContent=users.filter(u=>u.lastSeen&&u.lastSeen>h24).length;
+  $("a-posts").textContent=Object.keys(allPosts).length;
+
+  // Registration chart — last 7 days
+  const days=[],labels=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i); d.setHours(0,0,0,0);
+    const end=new Date(d); end.setHours(23,59,59,999);
+    const count=users.filter(u=>u.createdAt&&new Date(u.createdAt)>=d&&new Date(u.createdAt)<=end).length;
+    days.push(count);
+    labels.push(d.toLocaleDateString(undefined,{weekday:"short",month:"numeric",day:"numeric"}));
+  }
+  if(chartReg) chartReg.destroy();
+  const regCtx=document.getElementById("chart-registrations");
+  if(regCtx){
+    chartReg=new Chart(regCtx.getContext("2d"),{
+      type:"bar",
+      data:{labels,datasets:[{label:"New Users",data:days,backgroundColor:"rgba(108,99,255,.7)",borderColor:"#6C63FF",borderRadius:6,borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#B0B0C3"}},y:{ticks:{color:"#B0B0C3"},beginAtZero:true,precision:0}}}
+    });
+  }
+
+  // Activity pie
+  const verified=users.filter(u=>u.isVerified).length;
+  const suspended=users.filter(u=>u.isSuspended).length;
+  const online=users.filter(u=>u.isOnline).length;
+  const regular=users.length-verified-suspended;
+  if(chartActivity) chartActivity.destroy();
+  const actCtx=document.getElementById("chart-activity");
+  if(actCtx){
+    chartActivity=new Chart(actCtx.getContext("2d"),{
+      type:"doughnut",
+      data:{labels:["Regular","Verified","Suspended","Online Now"],datasets:[{data:[regular>0?regular:0,verified,suspended,online],backgroundColor:["#455A64","#6C63FF","#FF4757","#00D9A3"],borderWidth:0}]},
+      options:{responsive:true,plugins:{legend:{position:"bottom",labels:{color:"#B0B0C3",padding:16}}}}
+    });
+  }
+}
+
+$("export-audit-csv").onclick=()=>{
+  const rows=[["Action","Admin UID","Timestamp"]];
+  Object.values(allAuditLogs).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{
+    rows.push([a.action||"",a.adminUid||"",a.timestamp?new Date(a.timestamp).toLocaleString():""]);
+  });
+  downloadCSV(rows,"zex_audit_log.csv");
+};
+
+/* ============ VERIFICATION ============ */
+function renderVerifyList(){
+  const q=($("verify-search")?.value||"").trim().toLowerCase();
+  const entries=Object.entries(allUsers).filter(([uid,u])=>{
+    if(verifyFilter==="verified"&&!u.isVerified) return false;
+    if(verifyFilter==="unverified"&&u.isVerified) return false;
+    if(q&&!(u.name||"").toLowerCase().includes(q)&&!(u.zexId||"").toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const list=$("verify-list");
+  list.innerHTML=entries.map(([uid,u])=>`
+    <div class="user-row">
+      <div class="avatar" style="background:${avatarColor(u.zexId||u.name||"")};">${avatarInit(u.name||"")}</div>
+      <div class="meta">
+        <div class="name">${escHTML(u.name||"Unknown")} ${u.isVerified?`<span class="tag verified">Verified</span>`:""}</div>
+        <div class="sub"><span>${escHTML(u.zexId||"")}</span></div>
+      </div>
+      <div class="actions">
+        <div class="toggle${u.isVerified?" on":""}" onclick="toggleVerify('${uid}',${!u.isVerified},'${escHTML(u.name||"")}');this.classList.toggle('on');"></div>
+      </div>
+    </div>`).join("");
+}
+
+$$("[data-vfilter]").forEach(b=>{
+  b.onclick=()=>{$$("[data-vfilter]").forEach(x=>x.classList.remove("active"));b.classList.add("active");verifyFilter=b.dataset.vfilter;renderVerifyList();};
+});
+$("verify-search")?.addEventListener("input",renderVerifyList);
+
+/* BADGE */
+function applyBadgePreview(url){
+  const inline=$("badge-preview-inline"),icon=$("badge-preview-icon");
+  const testImg=new Image();
+  testImg.onload=()=>{
+    [inline,icon].forEach(el=>{
+      if(!el) return;
+      // Clear children, set background as image
+      el.innerHTML="";
+      const img=document.createElement("img");
+      img.src=url; img.style.cssText="width:100%;height:100%;object-fit:contain;border-radius:50%;";
+      el.appendChild(img);
+    });
+    const status=$("badge-url-status");
+    if(status) status.innerHTML=`<span style="color:var(--success);">Badge loaded successfully</span>`;
+  };
+  testImg.onerror=()=>{
+    const status=$("badge-url-status");
+    if(status) status.innerHTML=`<span style="color:var(--danger);">Warning: badge URL failed to load</span>`;
+  };
+  testImg.src=url;
+}
+
+$("badge-upload").addEventListener("change",async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  if(!f.type.startsWith("image/")){showToast("Image files only.");return;}
+  if(f.size>2*1024*1024){showToast("Max 2MB for badge image.");return;}
+  showToast("Uploading badge...");
+  const path=`zex-messenger/badges/verification-badge.${f.name.split(".").pop()}`;
+  const {error}=await supabase.storage.from(BUCKET_NAME).upload(path,f,{contentType:f.type,upsert:true});
+  if(error){showToast("Upload failed: "+error.message);return;}
+  const {data}=supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
+  await update(ref(db,"/appSettings"),{badgeUrl:data.publicUrl});
+  applyBadgePreview(data.publicUrl);
+  await logActivity("Updated verification badge image");
+  showToast("Badge image updated!");
+});
+
+$("reset-badge").onclick=async()=>{
+  await update(ref(db,"/appSettings"),{badgeUrl:null});
+  ["badge-preview-inline","badge-preview-icon"].forEach(id=>{
+    const el=$(id); if(el){el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:${id==="badge-preview-icon"?"14":"12"}px;height:${id==="badge-preview-icon"?"14":"12"}px;"><polyline points="4 12 9 17 20 6"/></svg>`;}
+  });
+  const status=$("badge-url-status"); if(status) status.textContent="";
+  showToast("Badge reset to default.");
+};
+
+$("badge-anim-toggle").onclick=()=>$("badge-anim-toggle").classList.toggle("on");
+$("save-badge-settings").onclick=async()=>{
+  const anim=$("badge-anim-toggle").classList.contains("on");
+  const animType=$("badge-anim-type").value;
+  await update(ref(db,"/appSettings"),{badgeAnimation:anim,badgeAnimationType:animType});
+  await logActivity(`Updated badge animation: ${anim?animType:"off"}`);
+  showToast("Badge settings saved!");
+};
+
+/* ============ BOOKINGS ============ */
+function renderBookings(){
+  const entries=Object.entries(allBookings).filter(([bid,b])=>{
+    if(bookingFilter==="all") return true;
+    return b.status===bookingFilter;
+  }).sort((a,b)=>(b[1].timestamp||0)-(a[1].timestamp||0));
+  const total=Object.values(allBookings);
+  $("bk-total").textContent=total.length;
+  $("bk-pending").textContent=total.filter(b=>b.status==="pending").length;
+  $("bk-approved").textContent=total.filter(b=>b.status==="approved").length;
+  $("bk-rejected").textContent=total.filter(b=>b.status==="rejected").length;
+  const list=$("bookings-list");
+  if(entries.length===0){list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">No bookings found.</div>`;return;}
+  list.innerHTML=entries.map(([bid,b])=>`
+    <div class="user-row">
+      <div class="meta">
+        <div class="name">${escHTML(b.name||"Unknown")} <span class="tag ${b.status||"pending"}">${b.status||"pending"}</span></div>
+        <div class="sub">
+          <span>${escHTML(b.plan||"")} · ${escHTML(b.price||"")}</span>
+          <span>${escHTML(b.zexId||"")}</span>
+          <span>Ref: ${escHTML(b.payRef||"")}</span>
+          <span>${timeAgo(b.timestamp)}</span>
+        </div>
+        ${b.note?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">${escHTML(b.note)}</div>`:""}
+      </div>
+      <div class="actions">
+        ${b.status==="pending"?`
+          <button class="btn success sm" onclick="approveBooking('${bid}','${b.uid||""}','${escHTML(b.name||"")}')">Approve</button>
+          <button class="btn danger sm" onclick="rejectBooking('${bid}','${escHTML(b.name||"")}')">Reject</button>
+        `:`<button class="btn ghost sm" onclick="deleteBooking('${bid}')">Delete</button>`}
+      </div>
+    </div>`).join("");
+}
+
+$$("[data-bfilter]").forEach(b=>{
+  b.onclick=()=>{$$("[data-bfilter]").forEach(x=>x.classList.remove("active"));b.classList.add("active");bookingFilter=b.dataset.bfilter;renderBookings();};
+});
+
+window.approveBooking=async(bid,uid,name)=>{
+  await update(ref(db,`/verificationBookings/${bid}`),{status:"approved"});
+  if(uid) await update(ref(db,`/users/${uid}`),{isVerified:true});
+  await logActivity(`Approved verification booking for ${name}`);
+  showToast("Booking approved & user verified!");
+};
+window.rejectBooking=async(bid,name)=>{
+  await update(ref(db,`/verificationBookings/${bid}`),{status:"rejected"});
+  await logActivity(`Rejected verification booking for ${name}`);
+  showToast("Booking rejected.");
+};
+window.deleteBooking=async(bid)=>{await remove(ref(db,`/verificationBookings/${bid}`));showToast("Booking deleted.");};
+
+$("export-csv").onclick=()=>{
+  const rows=[["Name","ZEX ID","Plan","Price","Pay Ref","Status","Date"]];
+  Object.values(allBookings).forEach(b=>{rows.push([b.name||"",b.zexId||"",b.plan||"",b.price||"",b.payRef||"",b.status||"",b.timestamp?new Date(b.timestamp).toLocaleDateString():""]);});
+  downloadCSV(rows,"zex_bookings.csv");
+};
+
+/* ============ BROADCAST — OPTIMIZED MULTI-PATH ============ */
+$("notif-target").onchange=()=>{
+  const specific=$("notif-target").value==="specific";
+  $("specific-user-row").style.display=specific?"block":"none";
+};
+
+$("send-broadcast").onclick=async()=>{
+  const title=$("notif-title").value.trim(),msg=$("notif-message").value.trim();
+  if(!title||!msg){showToast("Fill in title and message.");return;}
+  const target=$("notif-target").value;
+  const type=$("notif-type").value;
+  const btn=$("send-broadcast"); setLoading(btn,true);
+  const status=$("broadcast-status"); status.style.display="block"; status.textContent="Preparing broadcast...";
+
+  try{
+    let uids=[];
+    if(target==="all") uids=Object.keys(allUsers);
+    else if(target==="verified") uids=Object.keys(allUsers).filter(uid=>allUsers[uid]?.isVerified);
+    else if(target==="specific"){
+      const zexid=$("notif-zexid").value.trim();
+      const match=Object.entries(allUsers).find(([_,u])=>(u.zexId||"").toLowerCase()===zexid.toLowerCase());
+      if(!match){showToast("User not found.");setLoading(btn,false);status.style.display="none";return;}
+      uids=[match[0]];
+    }
+
+    // BULK MULTI-PATH UPDATE — no sequential loop
+    const updates={};
+    const now=Date.now();
+    for(const uid of uids){
+      const key=push(ref(db,"/notifications/"+uid)).key;
+      updates[`/notifications/${uid}/${key}`]={type,title,message:msg,sentAt:now,read:false};
+    }
+    if(Object.keys(updates).length>0) await update(ref(db,"/"),updates);
+
+    await push(ref(db,"/adminSentNotifications"),{title,message:msg,type,recipients:target==="specific"?($("notif-zexid").value.trim()):target,sentAt:serverTimestamp(),sentBy:currentAdmin?.uid||"admin",count:uids.length});
+    await logActivity(`Sent broadcast "${title}" to ${uids.length} users`);
+    status.textContent=`Sent to ${uids.length} users.`;
+    setTimeout(()=>{status.style.display="none";},4000);
+    $("notif-title").value=""; $("notif-message").value="";
+    showToast(`Broadcast sent to ${uids.length} users!`);
+  }catch(e){showToast("Error: "+e.message);status.style.display="none";}
+  setLoading(btn,false);
+};
+
+$("test-self-notif").onclick=async()=>{
+  if(!currentAdmin?.uid) return;
+  const key=push(ref(db,`/notifications/${currentAdmin.uid}`)).key;
+  await update(ref(db,"/"),{[`/notifications/${currentAdmin.uid}/${key}`]:{type:"info",title:"Test Notification",message:"Admin broadcast test — system working correctly.",sentAt:Date.now(),read:false}});
+  showToast("Test notification sent to your account.");
+};
+
+function renderVipUserList(){
+    const q=($("vip-user-search")?.value||"").trim().toLowerCase();
+    if(!q) return; // wait for user to type search query
+  }
+  
+  /* ============ VIP MANAGEMENT ============ */
+    // Load VIP config from Firebase
+    onValue(ref(db,'/config/vip'),snap=>{
+      const cfg=snap.val()||{};
+      if($("vip-toggle-bronze")) $("vip-toggle-bronze").classList.toggle("on",cfg.bronzeEnabled!==false);
+      if($("vip-toggle-silver")) $("vip-toggle-silver").classList.toggle("on",cfg.silverEnabled!==false);
+      if($("vip-toggle-gold"))   $("vip-toggle-gold").classList.toggle("on",cfg.goldEnabled!==false);
+    });
+    ["vip-toggle-bronze","vip-toggle-silver","vip-toggle-gold"].forEach(id=>{
+      const el=$(id); if(el) el.onclick=async()=>{
+        el.classList.toggle("on");
+        const tierMap={"vip-toggle-bronze":"bronzeEnabled","vip-toggle-silver":"silverEnabled","vip-toggle-gold":"goldEnabled"};
+        await update(ref(db,'/config/vip'),{[tierMap[id]]:el.classList.contains("on")});
+        await logActivity("VIP tier "+id+" set to "+(el.classList.contains("on")?"on":"off"));
+        showToast("Tier setting saved!");
+      };
+    });
+
+    function renderVipList(query=""){
+      const list=$("vip-user-list"); if(!list) return;
+      const q=query.toLowerCase();
+      const matches=Object.entries(allUsers)
+        .filter(([,u])=>!q||((u.name||"").toLowerCase().includes(q)||((u.zexId||"").toLowerCase().includes(q))))
+        .slice(0,20);
+      if(matches.length===0){list.innerHTML='<div style="padding:12px;color:var(--muted);font-size:13px;">No users found.</div>';return;}
+      list.innerHTML=matches.map(([uid,u])=>{
+        const tier=u.vipTier||""; const active=u.vipEnabled?true:false;
+        return `<div class="user-row" id="vip-row-${uid}">
+          <div class="avatar" style="background:${avatarColor(u.zexId||u.name||"")};">${avatarInit(u.name||"")}</div>
+          <div class="meta">
+            <div class="name">${escHTML(u.name||"Unknown")}</div>
+            <div class="sub">${escHTML(u.zexId||"")} · ${tier?`<span style="color:${tier==="bronze"?"#CD7F32":tier==="silver"?"#C0C0C0":"#FFD700"};font-weight:700;">${tier}</span>`:"No VIP"}</div>
+          </div>
+          <select class="input" id="vip-select-${uid}" style="width:110px;padding:6px 8px;font-size:12px;">
+            <option value="">— No VIP —</option>
+            <option value="bronze" ${tier==="bronze"?"selected":""}>Bronze</option>
+            <option value="silver" ${tier==="silver"?"selected":""}>Silver</option>
+            <option value="gold" ${tier==="gold"?"selected":""}>Gold</option>
+          </select>
+          <div class="toggle ${active?"on":""}" id="vip-active-${uid}" title="VIP Active"></div>
+          <button class="btn sm" onclick="applyUserVip('${uid}')">Apply</button>
+        </div>`;
+      }).join("");
+      // Wire up toggle + select change handlers
+      matches.forEach(([uid,u])=>{
+        const sel=$(`vip-select-${uid}`), tog=$(`vip-active-${uid}`);
+        if(tog) tog.addEventListener('click',()=>tog.classList.toggle("on"));
+        if(sel) sel.addEventListener('change',()=>{if(!sel.value)tog.classList.remove("on");else tog.classList.add("on");});
+      });
+    }
+
+    window.applyUserVip=async(uid)=>{
+      const sel=$("vip-select-"+uid), tog=$("vip-active-"+uid);
+      if(!sel||!tog) return;
+      const tier=sel.value; const active=tog.classList.contains("on");
+      await update(ref(db,`/users/${uid}`),{vipTier:tier||null,vipEnabled:tier?active:false});
+      showToast("VIP updated!");
+      await logActivity(`VIP set to ${tier||"none"} for user ${uid}`);
+    };
+
+    $("vip-search")?.addEventListener("input",e=>renderVipList(e.target.value.trim()));
+
+
+    /* ============ BADGE GALLERY ============ */
+    let selectedBadgeId='check', selectedBadgeColor='#6C63FF', selectedBadgeSize=22;
+
+    function initBadgeGallery(){
+      const gallery=$('badge-gallery');
+      if(!gallery) return;
+      const fgColor=(selectedBadgeColor==='#FFFFFF'||selectedBadgeColor==='#C0C0C0')?'#000':'#fff';
+      gallery.innerHTML=BADGES.map(function(b){
+        return '<div class="badge-gallery-item" data-id="'+b.id+'" title="'+b.label+'">'
+          +'<div style="width:34px;height:34px;border-radius:50%;background:'+selectedBadgeColor+';display:flex;align-items:center;justify-content:center;">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="'+fgColor+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">'+b.svg+'</svg>'
+          +'</div><div class="lbl">'+b.label+'</div></div>';
+      }).join('');
+      gallery.querySelectorAll('.badge-gallery-item').forEach(function(item){
+        item.addEventListener('click',function(){
+          selectedBadgeId=item.dataset.id;
+          gallery.querySelectorAll('.badge-gallery-item').forEach(function(el){el.classList.remove('selected');});
+          item.classList.add('selected');
+          updateBadgePreview();
+        });
+      });
+      const selItem=gallery.querySelector('[data-id="'+selectedBadgeId+'"]');
+      if(selItem) selItem.classList.add('selected');
+      document.querySelectorAll('.badge-color-swatch').forEach(function(sw){
+        sw.addEventListener('click',function(){
+          selectedBadgeColor=sw.dataset.color;
+          document.querySelectorAll('.badge-color-swatch').forEach(function(s){s.classList.remove('selected');});
+          sw.classList.add('selected');
+          const fgC=(selectedBadgeColor==='#FFFFFF'||selectedBadgeColor==='#C0C0C0')?'#000':'#fff';
+          gallery.querySelectorAll('.badge-gallery-item').forEach(function(item){
+            const iconDiv=item.querySelector('div');
+            if(iconDiv){iconDiv.style.background=selectedBadgeColor;const s=iconDiv.querySelector('svg');if(s)s.setAttribute('stroke',fgC);}
+          });
+          updateBadgePreview();
+        });
+      });
+      const firstSwatch=document.querySelector('.badge-color-swatch[data-color="'+selectedBadgeColor+'"]');
+      if(firstSwatch) firstSwatch.classList.add('selected');
+      const sizeEl=$('badge-size-select');
+      if(sizeEl){sizeEl.addEventListener('change',function(e){selectedBadgeSize=parseInt(e.target.value)||22;updateBadgePreview();});sizeEl.value=String(selectedBadgeSize);}
+      updateBadgePreview();
+    }
+
+    function updateBadgePreview(){
+      const b=BADGES.find(function(bb){return bb.id===selectedBadgeId;})||BADGES[0];
+      const innerSz=Math.round(selectedBadgeSize*.55);
+      const fgColor=(selectedBadgeColor==='#FFFFFF'||selectedBadgeColor==='#C0C0C0')?'#000':'#fff';
+      const iconHtml='<svg viewBox="0 0 24 24" fill="none" stroke="'+fgColor+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:'+innerSz+'px;height:'+innerSz+'px;">'+b.svg+'</svg>';
+      const prev=$('badge-preview-new');
+      if(prev){prev.style.background=selectedBadgeColor;prev.innerHTML=iconHtml;}
+      const inlPrev=$('badge-preview-inline-new');
+      if(inlPrev){inlPrev.style.background=selectedBadgeColor;inlPrev.style.width=selectedBadgeSize+'px';inlPrev.style.height=selectedBadgeSize+'px';inlPrev.innerHTML=iconHtml;}
+    }
+
+    const saveBadgeBtn=$('save-badge-choice');
+    if(saveBadgeBtn) saveBadgeBtn.addEventListener('click',async function(){
+      await set(ref(db,'/appSettings/badge'),{badgeType:selectedBadgeId,badgeColor:selectedBadgeColor,badgeSize:selectedBadgeSize});
+      await logActivity('Badge updated to '+selectedBadgeId+' / '+selectedBadgeColor);
+      showToast('Badge saved across all users!');
+    });
+    const resetBadgeBtn=$('reset-badge-default');
+    if(resetBadgeBtn) resetBadgeBtn.addEventListener('click',async function(){
+      await set(ref(db,'/appSettings/badge'),{badgeType:'check',badgeColor:'#6C63FF',badgeSize:22});
+      selectedBadgeId='check';selectedBadgeColor='#6C63FF';selectedBadgeSize=22;
+      initBadgeGallery();showToast('Reset to default badge!');
+    });
+    get(ref(db,'/appSettings/badge')).then(function(snap){
+      const cfg=snap.val();
+      if(cfg){selectedBadgeId=cfg.badgeType||'check';selectedBadgeColor=cfg.badgeColor||'#6C63FF';selectedBadgeSize=parseInt(cfg.badgeSize)||22;
+        const sizeEl=$('badge-size-select');if(sizeEl)sizeEl.value=String(selectedBadgeSize);}
+    });
+  
+/* ============ APP SETTINGS ============ */
+$("save-settings").onclick=async()=>{
+  const btn=$("save-settings"); setLoading(btn,true);
+  const settings={
+    appName:$("set-app-name").value.trim()||"ZEX GRAM",
+    tagline:$("set-tagline").value.trim(),
+    announcement:$("set-announcement").value.trim(),
+    maxFileSize:parseInt($("set-maxfile").value)||25,
+    maxMessageLength:parseInt($("set-maxmsg").value)||1000,
+    footerText:$("set-footer").value.trim(),
+    maintenanceMode:$("set-maint").classList.contains("on"),
+    registrationOpen:$("set-reg").classList.contains("on"),
+  };
+  await update(ref(db,"/appSettings"),settings);
+  await logActivity("Updated app settings");
+  setLoading(btn,false); showToast("Settings saved and synced to all users!");
+};
+
+["set-maint","set-reg"].forEach(id=>{$(id).onclick=()=>$(id).classList.toggle("on");});
+
+/* ============ REFRESH STATS ============ */
+$("refresh-stats").onclick=renderStats;
+
+/* ============ CONFIG MANAGER ============ */
+$("cfg-firebase").value=JSON.stringify(window.firebaseConfig,null,2);
+$("cfg-supa-url").value=window.SUPABASE_URL||"";
+
+$("cfg-fb-validate").onclick=()=>{
+  try{JSON.parse($("cfg-firebase").value);showToast("Valid JSON!");}
+  catch(e){showToast("Invalid JSON: "+e.message);}
+};
+$("cfg-fb-apply").onclick=()=>{
+  try{const c=JSON.parse($("cfg-firebase").value);window.firebaseConfig=c;showToast("Config applied for this session.");}
+  catch(e){showToast("Invalid JSON");}
+};
+$("cfg-fb-copy").onclick=()=>{navigator.clipboard.writeText($("cfg-firebase").value);showToast("Copied!");};
+$("cfg-sb-test").onclick=async()=>{
+  try{const cl=window.supabase.createClient($("cfg-supa-url").value,$("cfg-supa-key").value||window.SUPABASE_ANON_KEY);const{data,error}=await cl.storage.listBuckets();if(error)throw error;showToast("Supabase connection OK! "+data.length+" buckets found.");}catch(e){showToast("Connection failed: "+e.message);}
+};
+$("cfg-sb-apply").onclick=()=>{
+  supabase=window.supabase.createClient($("cfg-supa-url").value,$("cfg-supa-key").value||window.SUPABASE_ANON_KEY);
+  showToast("Supabase config applied.");
+};
+$("cfg-bucket").value=BUCKET_NAME;
+$("cur-bucket").textContent=BUCKET_NAME;
+$("cfg-bucket-apply").onclick=()=>{
+  BUCKET_NAME=$("cfg-bucket").value.trim()||"zex-messenger";
+  localStorage.setItem("zex_bucket",BUCKET_NAME);
+  $("cur-bucket").textContent=BUCKET_NAME;
+  showToast("Bucket updated.");
+};
+
+/* ============ TEST MODE ============ */
+$("run-full-test").onclick=async()=>{
+  const steps=[
+    {desc:"Firebase Auth connected",fn:async()=>{if(!auth.currentUser) throw new Error("Not authenticated");}},
+    {desc:"Database read",fn:async()=>{await get(ref(db,"/appSettings"));}},
+    {desc:"Database write",fn:async()=>{await set(ref(db,`/testNode/admin_test`),{ts:Date.now()});await remove(ref(db,`/testNode/admin_test`));}},
+    {desc:"Supabase storage list",fn:async()=>{const{error}=await supabase.storage.listBuckets();if(error) throw error;}},
+    {desc:"Admin record exists",fn:async()=>{if(!currentAdmin) throw new Error("No admin data");}},
+  ];
+  const stepsEl=$("test-steps"); stepsEl.innerHTML="";
+  steps.forEach(s=>{const el=document.createElement("div");el.className="test-step";el.innerHTML=`<div class="ico pending">○</div><div class="desc">${escHTML(s.desc)}</div>`;stepsEl.appendChild(el);});
+  let ok=0;
+  for(let i=0;i<steps.length;i++){
+    const el=stepsEl.children[i]; const ico=el.querySelector(".ico");
+    ico.className="ico running"; ico.textContent="…";
+    try{await steps[i].fn();ico.className="ico ok";ico.textContent="✓";ok++;}
+    catch(e){ico.className="ico fail";ico.textContent="✗";el.innerHTML+=`<div style="font-size:11px;color:var(--danger);margin-left:36px;">${escHTML(e.message)}</div>`;}
+  }
+  $("test-result").innerHTML=ok===steps.length?`<span style="color:var(--success);">All systems operational (${ok}/${steps.length})</span>`:`<span style="color:var(--danger);">${steps.length-ok} issue(s) (${ok}/${steps.length} passed)</span>`;
+};
+
+$("t-db").onclick=async()=>{
+  const out=$("t-db-out"); out.textContent="";
+  try{
+    const path=`/testNode/db_${Date.now()}`;
+    out.textContent+="Writing... "; await set(ref(db,path),"test_"+Date.now()); out.textContent+="OK\n";
+    out.textContent+="Reading... "; const s=await get(ref(db,path)); out.textContent+=s.val()?"OK\n":"FAIL\n";
+    out.textContent+="Deleting... "; await remove(ref(db,path)); out.textContent+="OK\n";
+    out.textContent+="All DB operations passed.";
+  }catch(e){out.textContent+="FAILED: "+e.message;}
+};
+
+$("t-storage").onclick=async()=>{
+  const out=$("t-storage-out"),img=$("t-storage-img"); out.textContent=""; img.style.display="none";
+  try{
+    const blob=new Blob([new Uint8Array(67).fill(0)],{type:"image/png"});
+    const path=`tests/storage_${Date.now()}.png`;
+    out.textContent+="Uploading... "; const up=await supabase.storage.from(BUCKET_NAME).upload(path,blob,{contentType:"image/png"});if(up.error)throw up.error; out.textContent+="OK\n";
+    out.textContent+="Getting URL... "; const{data}=supabase.storage.from(BUCKET_NAME).getPublicUrl(path); out.textContent+="OK\n";
+    img.src=data.publicUrl; img.style.display="inline-block";
+    out.textContent+="Deleting... "; const del=await supabase.storage.from(BUCKET_NAME).remove([path]);if(del.error)throw del.error; out.textContent+="OK\n";
+    out.textContent+="All storage operations passed.";
+  }catch(e){out.textContent+="FAILED: "+e.message;}
+};
+
+$("t-realtime").onclick=async()=>{
+  const out=$("t-realtime-out"); out.textContent="Setting up listener...";
+  const path=`/testNode/realtime_${Date.now()}`;
+  const r=ref(db,path);
+  const t0=performance.now();
+  const cb=snap=>{if(snap.val()){const dt=performance.now()-t0;out.textContent=`Listener triggered in ${dt.toFixed(1)}ms`;off(r,"value",cb);remove(r);}};
+  onValue(r,cb);
+  setTimeout(()=>set(r,"ping"),100);
+};
+
+/* ============ CSV UTILITY ============ */
+function downloadCSV(rows,filename){
+  const csv=rows.map(r=>r.map(c=>`"${String(c||"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=filename; a.click();
+}
+
+
+  /* ============ PROMOTIONS MANAGEMENT ============ */
+  let allPromos={},allPromoPosts={};
+  function loadPromos(){
+    onValue(ref(db,'/promotionPosts'),snap=>{
+      allPromos=snap.val()||{};
+      renderPromos();
+    });
+  }
+
+  function renderPromos(){
+      const entries=Object.entries(allPromos).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+      allPromoPosts=Object.fromEntries(entries);
+      $("promos-count").textContent=entries.length;
+      const list=$("promos-list");
+      if(entries.length===0){list.innerHTML='<div class="card" style="text-align:center;color:var(--muted);">No promotions yet. Create one above.</div>';return;}
+      list.innerHTML=entries.map(function([pid,p]){
+        return '<div class="card" id="promo-card-'+pid+'" style="display:flex;gap:14px;align-items:flex-start;">'
+          +(p.imageUrl?'<img src="'+escHTML(p.imageUrl)+'" style="width:80px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0;">':'')
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="font-weight:700;font-size:14px;">'+escHTML(p.title||"Untitled")+'</div>'
+            +'<div style="font-size:12px;color:var(--muted);margin-top:4px;">'+escHTML(p.description||"")+'</div>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:6px;">'+timeAgo(p.createdAt)+' · '+(p.active!==false?"Active":"Inactive")+'</div>'
+            +(p.ctaUrl?'<div style="font-size:11px;color:var(--primary);margin-top:3px;">'+escHTML(p.ctaUrl)+'</div>':'')
+          +'</div>'
+          +'<div style="display:flex;gap:6px;flex-direction:column;flex-shrink:0;">'
+            +'<button class="btn ghost sm" onclick="togglePromoActive(''+pid+'','+(!p.active)+')">'+( p.active!==false?"Deactivate":"Activate")+'</button>'
+            +'<button class="btn sm" style="background:rgba(108,99,255,.15);color:var(--primary);" onclick="editPromoPost(''+pid+'')">Edit</button>'
+            +'<button class="btn danger sm" onclick="deletePromoPost(''+pid+'')">Delete</button>'
+          +'</div>'
+        +'</div>';
+      }).join("");
+    }
+
+  $("promo-publish").onclick=async()=>{
+    const title=$("promo-title").value.trim();
+    if(!title){showToast("Title is required.");return;}
+    const btn=$("promo-publish"); setLoading(btn,true);
+    const status=$("promo-status"); status.style.display="block";status.textContent="Publishing...";
+    try{
+      await push(ref(db,"/promotionPosts"),{
+        title,
+        description:$("promo-desc").value.trim(),
+        badge:$("promo-badge").value.trim(),
+        ctaLabel:$("promo-cta-label").value.trim()||"Learn More",
+        ctaUrl:$("promo-cta-url").value.trim(),
+        imageUrl:$("promo-img-url").value.trim(),
+        active:$("promo-active-toggle").classList.contains("on"),
+        createdAt:serverTimestamp(),
+        createdBy:currentAdmin?.uid||"admin"
+      });
+      await logActivity(`Published promotion: ${title}`);
+      ["promo-title","promo-desc","promo-badge","promo-cta-label","promo-cta-url","promo-img-url"].forEach(id=>{$(id).value="";});
+      status.textContent="Promotion published!";
+      setTimeout(()=>{status.style.display="none";},3000);
+      showToast("Promotion published!");
+    }catch(e){status.textContent="Error: "+e.message;showToast("Failed: "+e.message);}
+    setLoading(btn,false);
+  };
+
+  $("promo-active-toggle").onclick=()=>$("promo-active-toggle").classList.toggle("on");
+
+  window.togglePromoActive=async(pid,active)=>{
+    await update(ref(db,`/promotionPosts/${pid}`),{active});
+    showToast(active?"Promotion activated":"Promotion deactivated");
+  };
+  window.deletePromo=async function(pid){
+      if(!confirm("Delete this promotion?")) return;
+      await remove(ref(db,'/promotionPosts/'+pid));
+      await logActivity("Deleted promotion");
+      showToast("Promotion deleted");
+    };
+    window.deletePromoPost=window.deletePromo;
+    window.editPromoPost=function(pid){
+      const p=allPromoPosts[pid]; if(!p) return;
+      showModal('<div class="modal-card">'
+        +'<div class="modal-header"><h3>Edit Promotion</h3><button class="close-btn" onclick="closeModal()">&#x2715;</button></div>'
+        +'<div style="padding:20px;display:flex;flex-direction:column;gap:12px;">'
+          +'<input class="input" id="ep-title" placeholder="Title *" value="'+escHTML(p.title||'')+'"/>'
+          +'<textarea class="input" id="ep-desc" placeholder="Description" rows="3" style="resize:vertical;">'+escHTML(p.description||'')+'</textarea>'
+          +'<input class="input" id="ep-badge" placeholder="Badge label (e.g. 50% OFF)" value="'+escHTML(p.badge||'')+'"/>'
+          +'<input class="input" id="ep-cta-label" placeholder="CTA Button Label" value="'+escHTML(p.ctaLabel||'Learn More')+'"/>'
+          +'<input class="input" id="ep-cta-url" placeholder="CTA URL" value="'+escHTML(p.ctaUrl||'')+'"/>'
+          +'<input class="input" id="ep-img-url" placeholder="Image URL" value="'+escHTML(p.imageUrl||'')+'"/>'
+          +'<div style="display:flex;align-items:center;gap:10px;">'
+            +'<span style="font-size:13px;font-weight:600;">Active:</span>'
+            +'<div class="toggle '+(p.active!==false?'on':'')+'" id="ep-active"></div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="padding:0 20px 20px;display:flex;gap:10px;">'
+          +'<button class="btn" onclick="saveEditedPromo(''+pid+'')">Save</button>'
+          +'<button class="btn ghost" onclick="closeModal()">Cancel</button>'
+        +'</div>'
+      +'</div>');
+      document.getElementById("ep-active").onclick=()=>document.getElementById("ep-active").classList.toggle("on");
+    };
+    window.saveEditedPromo=async function(pid){
+      const titleEl=document.getElementById("ep-title");
+      if(!titleEl||!titleEl.value.trim()){showToast("Title is required.");return;}
+      await update(ref(db,'/promotionPosts/'+pid),{
+        title:titleEl.value.trim(),
+        description:(document.getElementById("ep-desc")?.value||"").trim(),
+        badge:(document.getElementById("ep-badge")?.value||"").trim(),
+        ctaLabel:(document.getElementById("ep-cta-label")?.value||"Learn More").trim(),
+        ctaUrl:(document.getElementById("ep-cta-url")?.value||"").trim(),
+        imageUrl:(document.getElementById("ep-img-url")?.value||"").trim(),
+        active:document.getElementById("ep-active")?.classList.contains("on")
+      });
+      await logActivity("Edited promotion: "+titleEl.value.trim());
+      showToast("Promotion updated!");
+      closeModal();
+    };
+
+  /* ============ VIP MANAGEMENT ============ */
+  // Load VIP config from Firebase on boot
+  onValue(ref(db,'/config/vip'),snap=>{
+    const cfg=snap.val()||{};
+    if($("vip-nova-toggle")) $("vip-nova-toggle").classList.toggle("on",cfg.novaEnabled!==false);
+    if($("vip-silver-toggle")) $("vip-silver-toggle").classList.toggle("on",cfg.silverEnabled!==false);
+    if($("vip-imperial-toggle")) $("vip-imperial-toggle").classList.toggle("on",cfg.imperialEnabled!==false);
+  });
+
+  ["vip-nova-toggle","vip-silver-toggle","vip-imperial-toggle"].forEach(id=>{
+    const el=$(id); if(el) el.onclick=()=>el.classList.toggle("on");
+  });
+
+  $("save-vip-config").onclick=async()=>{
+    const btn=$("save-vip-config"); setLoading(btn,true);
+    await update(ref(db,'/config/vip'),{
+      novaEnabled:$("vip-nova-toggle")?.classList.contains("on"),
+      silverEnabled:$("vip-silver-toggle")?.classList.contains("on"),
+      imperialEnabled:$("vip-imperial-toggle")?.classList.contains("on"),
+      updatedAt:serverTimestamp()
+    });
+    await logActivity("Updated VIP tier configuration");
+    setLoading(btn,false); showToast("VIP configuration saved!");
+  };
+
+  // VIP user assignment search
+  let vipUserListEl=null;
+  $("vip-user-search")?.addEventListener("input",e=>{
+    const q=e.target.value.trim().toLowerCase();
+    const list=$("vip-user-list");
+    if(!q){list.innerHTML="";return;}
+    const matches=Object.entries(allUsers).filter(([uid,u])=>{
+      return (u.name||"").toLowerCase().includes(q)||(u.zexId||"").toLowerCase().includes(q);
+    }).slice(0,10);
+    if(matches.length===0){list.innerHTML=`<div style="padding:12px;color:var(--muted);font-size:13px;">No users found.</div>`;return;}
+    list.innerHTML=matches.map(([uid,u])=>`
+      <div class="user-row">
+        <div class="avatar" style="background:${avatarColor(u.zexId||u.name||"")};">${avatarInit(u.name||"")}</div>
+        <div class="meta">
+          <div class="name">${escHTML(u.name||"Unknown")}
+            ${u.vipTier&&u.vipEnabled?`<span class="tag verified">${escHTML(u.vipTier)}</span>`:""}
+          </div>
+          <div class="sub"><span>${escHTML(u.zexId||"")}</span></div>
+        </div>
+        <div class="actions">
+          <select class="input" id="vip-sel-${uid}" style="width:100px;padding:6px 8px;font-size:12px;">
+            <option value="">None</option>
+            <option value="nova" ${u.vipTier==="nova"?"selected":""}>Nova</option>
+            <option value="silver" ${u.vipTier==="silver"?"selected":""}>Silver</option>
+            <option value="imperial" ${u.vipTier==="imperial"?"selected":""}>Imperial</option>
+          </select>
+          <button class="btn success sm" onclick="assignVip('${uid}','${escHTML(u.name||"")}')">Assign</button>
+        </div>
+      </div>`).join("");
+  });
+
+  window.assignVip=async(uid,name)=>{
+    const sel=$(`vip-sel-${uid}`);
+    if(!sel) return;
+    const tier=sel.value;
+    await update(ref(db,`/users/${uid}`),{vipTier:tier||null,vipEnabled:!!tier});
+    await logActivity(`Assigned VIP tier ${tier||"none"} to ${name}`);
+    showToast(tier?`${name} assigned ${tier} tier!`:`VIP removed from ${name}`);
+  };
+
+  /* ============ PER-USER CUSTOM BADGE ============ */
+  window.openSetBadgeModal=async(uid,name)=>{
+    const userSnap=await get(ref(db,`/users/${uid}`));
+    const u=userSnap.val()||{};
+    showModal(`<h3>Custom Badge for ${escHTML(name)}<button class="close" onclick="closeModal()">×</button></h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;">Assign a personal badge image. Overrides the global badge for this user.</p>
+      ${u.customBadgeUrl?`<div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;"><img src="${escHTML(u.customBadgeUrl)}" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:var(--card);"><span style="font-size:13px;color:var(--muted);">Current custom badge</span></div>`:""}
+      <label class="upload-area" for="user-badge-upload-${uid}" style="cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px;color:var(--muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        <div style="margin-top:8px;font-weight:600;font-size:13px;">Upload badge PNG (transparent)</div>
+      </label>
+      <input type="file" id="user-badge-upload-${uid}" accept="image/png,image/webp" style="display:none;">
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn sm" id="user-badge-apply">Upload & Apply</button>
+        ${u.customBadgeUrl?`<button class="btn ghost sm danger" id="user-badge-remove">Remove Custom Badge</button>`:""}
+      </div>
+      <div id="user-badge-status" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>`);
+
+    if(document.getElementById("user-badge-remove")){
+      document.getElementById("user-badge-remove").onclick=async()=>{
+        await update(ref(db,`/users/${uid}`),{customBadgeUrl:null});
+        await logActivity(`Removed custom badge from ${name}`);
+        closeModal(); showToast("Custom badge removed.");
+      };
+    }
+
+    document.getElementById("user-badge-apply").onclick=async()=>{
+      const input=document.getElementById(`user-badge-upload-${uid}`);
+      const f=input?.files[0];
+      if(!f){showToast("Select a file first.");return;}
+      if(!f.type.startsWith("image/")){showToast("Image files only.");return;}
+      if(f.size>2*1024*1024){showToast("Max 2MB.");return;}
+      const statusEl=document.getElementById("user-badge-status");
+      if(statusEl) statusEl.textContent="Uploading...";
+      const path=`badges/user_${uid}_${Date.now()}.${f.name.split(".").pop()}`;
+      const {error}=await supabase.storage.from(BUCKET_NAME).upload(path,f,{contentType:f.type,upsert:true});
+      if(error){if(statusEl)statusEl.textContent="Upload failed: "+error.message;return;}
+      const {data}=supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
+      await update(ref(db,`/users/${uid}`),{customBadgeUrl:data.publicUrl});
+      await logActivity(`Set custom badge for user ${name}`);
+      if(statusEl)statusEl.textContent="Badge applied!";
+      showToast("Custom badge set for "+name+"!");
+      setTimeout(closeModal,1200);
+    };
+  };
+
+  /* ============ BOOT PROMOTIONS ============ */
+  // Called in bootDashboard for nav section
+  
+/* ============ ADMIN SUPPORT CHATS ============ */
+let adminSupportMsgListener=null, activeSupportUid=null;
+
+function loadSupportInbox(){
+  const list=$("support-inbox-list"); if(!list) return;
+  list.innerHTML=`<div style="color:var(--muted);font-size:13px;padding:12px 0;">Loading...</div>`;
+  get(ref(db,"/supportChats")).then(snap=>{
+    const data=snap.val()||{};
+    const uids=Object.keys(data);
+    $("support-inbox-count").textContent=uids.length;
+    if(uids.length===0){list.innerHTML=`<div style="color:var(--muted);font-size:13px;padding:12px 0;">No support chats yet.</div>`;return;}
+    list.innerHTML="";
+    const sorted=uids.sort((a,b)=>{
+      const ta=data[a]?.meta?.lastTime||0, tb=data[b]?.meta?.lastTime||0;
+      return tb-ta;
+    });
+    let totalUnread=0;
+    sorted.forEach(uid=>{
+      const meta=data[uid]?.meta||{};
+      const unread=meta.unreadAdmin||0;
+      totalUnread+=unread;
+      const userInfo=allUsers[uid]||{};
+      const item=document.createElement("div");
+      item.style.cssText=`padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:4px;background:${uid===activeSupportUid?"var(--card)":"transparent"};display:flex;align-items:center;gap:10px;`;
+      item.onmouseover=()=>{if(uid!==activeSupportUid)item.style.background="var(--card)";};
+      item.onmouseout=()=>{if(uid!==activeSupportUid)item.style.background="transparent";};
+      const initials=(userInfo.name||"U").split(/\s+/).map(s=>s[0]||"").join("").slice(0,2).toUpperCase();
+      item.innerHTML=`
+        <div style="width:36px;height:36px;border-radius:50%;background:#6C63FF;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;">${escHTML(initials)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHTML(userInfo.name||uid)}</div>
+          <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHTML(meta.lastMessage||"No messages yet")}</div>
+        </div>
+        ${unread>0?`<span style="background:#6C63FF;color:#fff;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:700;">${unread}</span>`:""}`;
+      item.onclick=()=>openAdminSupportChat(uid,userInfo);
+      list.appendChild(item);
+    });
+    const badge=$("support-chats-badge");
+    if(badge){badge.style.display=totalUnread>0?"inline":"none";badge.textContent=totalUnread;}
+  }).catch(()=>{list.innerHTML=`<div style="color:var(--muted);font-size:13px;">Could not load.</div>`;});
+}
+
+function openAdminSupportChat(uid,userInfo){
+  activeSupportUid=uid;
+  // Mark admin unread as 0
+  update(ref(db,`/supportChats/${uid}/meta`),{unreadAdmin:0}).catch(()=>{});
+  const header=$("support-chat-header");
+  const nameEl=$("support-chat-user-name");
+  const zexEl=$("support-chat-user-zexid");
+  const inputArea=$("admin-support-input-area");
+  if(header) header.style.display="block";
+  if(nameEl) nameEl.textContent=userInfo.name||uid;
+  if(zexEl) zexEl.textContent=userInfo.zexId?`ZEX ID: ${userInfo.zexId}`:`UID: ${uid}`;
+  if(inputArea) inputArea.style.display="flex";
+  // Load messages
+  if(adminSupportMsgListener){off(adminSupportMsgListener.ref,"value",adminSupportMsgListener.cb);}
+  const msgsEl=$("admin-support-msgs");
+  if(!msgsEl) return;
+  const r=ref(db,`/supportChats/${uid}/messages`);
+  const cb=snap=>{
+    const data=snap.val()||{};
+    const msgs=Object.entries(data).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+    msgsEl.innerHTML="";
+    if(msgs.length===0){msgsEl.innerHTML=`<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center;">No messages yet</div>`;return;}
+    msgs.forEach(([,m])=>{
+      const isAdmin=m.sender==="admin";
+      const div=document.createElement("div");
+      div.style.cssText=`display:flex;flex-direction:column;align-items:${isAdmin?"flex-end":"flex-start"};margin-bottom:8px;`;
+      const bubble=document.createElement("div");
+      bubble.style.cssText=`max-width:75%;padding:8px 12px;border-radius:${isAdmin?"12px 12px 4px 12px":"12px 12px 12px 4px"};background:${isAdmin?"#6C63FF":"var(--card)"};color:${isAdmin?"#fff":"var(--text)"};font-size:13px;line-height:1.5;word-break:break-word;`;
+      if(m.type==="file"&&m.fileUrl){
+        if(m.fileType&&m.fileType.startsWith("image/")){
+          bubble.innerHTML=`<img src="${escHTML(m.fileUrl)}" style="max-width:200px;border-radius:8px;display:block;cursor:pointer;" onclick="window.open('${escHTML(m.fileUrl)}','_blank')">`;
+          if(m.text) bubble.innerHTML+=`<div style="margin-top:4px;">${escHTML(m.text)}</div>`;
+        }else{
+          bubble.innerHTML=`<a href="${escHTML(m.fileUrl)}" target="_blank" rel="noopener" style="color:inherit;">📎 ${escHTML(m.fileName||"File")}</a>`;
+        }
+      }else{
+        bubble.textContent=m.text||"";
+      }
+      div.appendChild(bubble);
+      const ts=document.createElement("div");
+      ts.style.cssText="font-size:11px;color:var(--muted);margin-top:2px;";
+      ts.textContent=m.sender==="admin"?"Admin · "+new Date(m.ts).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"}):new Date(m.ts).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+      div.appendChild(ts);
+      msgsEl.appendChild(div);
+    });
+    msgsEl.scrollTop=msgsEl.scrollHeight;
+  };
+  onValue(r,cb); adminSupportMsgListener={ref:r,cb};
+}
+
+async function sendAdminSupportReply(){
+  const inp=$("admin-support-input");
+  const text=inp.value.trim();
+  if(!text||!activeSupportUid) return;
+  inp.value="";
+  const msgRef=push(ref(db,`/supportChats/${activeSupportUid}/messages`));
+  await set(msgRef,{sender:"admin",ts:Date.now(),text});
+  await update(ref(db,`/supportChats/${activeSupportUid}/meta`),{lastMessage:text,lastTime:Date.now(),unreadUser:increment(1),unreadAdmin:0});
+}
+
+$("admin-support-send").onclick=sendAdminSupportReply;
+$("admin-support-input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAdminSupportReply();}};
+
+</script>
+
+<!-- ============ CONFIGURATION ============ -->
+<script>
+  window.firebaseConfig = {
+    apiKey: "AIzaSyD9EzXQkhqDX-Yd_D5VJmKETZ-8eMivsH8",
+    authDomain: "zex-messenger.firebaseapp.com",
+    databaseURL: "https://zex-messenger-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "zex-messenger",
+    storageBucket: "zex-messenger.firebasestorage.app",
+    messagingSenderId: "340980726261",
+    appId: "1:340980726261:web:b0f0cc820c0c828fb088bc"
+  };
+  window.SUPABASE_URL = "https://qpvshtppxloqatqxotqk.supabase.co";
+  window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwdnNodHBweGxvcWF0cXhvdHFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDU1MzcsImV4cCI6MjA5Mjg4MTUzN30.5adG_c6SFtVjj7463GR3120ZSucLgpc_VAffAty22WQ";
+  window.BUCKET_NAME = localStorage.getItem("zex_bucket") || "zex-messenger";
+
+// Setup eye toggles for admin auth
+setupEyeToggle('admin-password','eye-admin-pw');
+setupEyeToggle('signup-password','eye-signup-pw-adm');
+setupEyeToggle('signup-confirm','eye-signup-conf-adm');
+</script>
+</body>
+</html>
